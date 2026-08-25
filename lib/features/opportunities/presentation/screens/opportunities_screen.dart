@@ -97,6 +97,30 @@ class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
             ],
           ),
           const SizedBox(width: 8),
+          PopupMenuButton<OpportunitySort>(
+            tooltip: 'Sort opportunities',
+            onSelected: (sort) => ref
+                .read(opportunityControllerProvider.notifier)
+                .setSort(sort),
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: OpportunitySort.deadlineSoonest,
+                child: Text('Deadline: Soonest'),
+              ),
+              PopupMenuItem(
+                value: OpportunitySort.deadlineLatest,
+                child: Text('Deadline: Latest'),
+              ),
+              PopupMenuItem(
+                value: OpportunitySort.newest,
+                child: Text('Newest'),
+              ),
+              PopupMenuItem(
+                value: OpportunitySort.alphabetical,
+                child: Text('Alphabetical'),
+              ),
+            ],
+          ),
         ],
       ),
       body: SafeArea(

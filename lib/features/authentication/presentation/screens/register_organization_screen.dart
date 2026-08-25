@@ -72,7 +72,7 @@ class _RegisterOrganizationScreenState
             );
 
     if (success && mounted) {
-      context.go(RouteNames.home);
+      context.go(RouteNames.universityDashboard);
     }
   }
 

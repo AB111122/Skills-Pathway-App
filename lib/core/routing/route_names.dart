@@ -14,6 +14,16 @@ class RouteNames {
   static const String network = '/network';
   static const String chatbot = '/chatbot';
   static const String profile = '/profile';
+  static const String applications = '/applications';
+
+  // University Portal
+  static const String universityDashboard = '/university/dashboard';
+  static const String universityOpportunities = '/university/opportunities';
+  static const String universityCreateOpportunity = '/university/opportunities/create';
+  static const String universityApplications = '/university/applications';
+  static const String universityCreatePost = '/university/posts/create';
+  static const String universityPosts = '/university/posts';
+  static const String universityProfile = '/university/profile';
 
   // Detail Sub-routes
   static const String opportunityDetail = '/opportunities/:id';

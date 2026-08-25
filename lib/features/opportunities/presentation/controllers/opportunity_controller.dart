@@ -64,6 +64,10 @@ class OpportunityController extends StateNotifier<OpportunityState> {
     state = state.copyWith(activeTab: tab);
   }
 
+  void setSort(OpportunitySort sort) {
+    state = state.copyWith(sort: sort);
+  }
+
   /// Load details for a specific opportunity
   Future<OpportunityModel?> loadOpportunityDetails(String id) async {
     state = state.copyWith(isLoading: true);
@@ -97,7 +101,7 @@ class OpportunityController extends StateNotifier<OpportunityState> {
 
     OpportunityModel? updatedSelected = state.selectedOpportunity;
     if (updatedSelected?.id == id) {
-      updatedSelected = updatedSelected.copyWith(isSaved: updatedSavedStatus);
+      updatedSelected = updatedSelected?.copyWith(isSaved: updatedSavedStatus);
     }
 
     state = state.copyWith(
@@ -108,7 +112,8 @@ class OpportunityController extends StateNotifier<OpportunityState> {
 
   /// Mark opportunity as applied after opening official website
   Future<void> markApplied(String id) async {
-    await _service.markAsApplied(id);
+    final applied = await _service.markAsApplied(id);
+    if (!applied) return;
 
     final updatedList = state.opportunities.map((opp) {
       if (opp.id == id) {
@@ -117,11 +122,12 @@ class OpportunityController extends StateNotifier<OpportunityState> {
           appliedAt: DateTime.now(),
         );
       }
-      return opp}).toList();
+      return opp;
+    }).toList();
 
     OpportunityModel? updatedSelected = state.selectedOpportunity;
     if (updatedSelected?.id == id) {
-      updatedSelected = updatedSelected.copyWith(
+      updatedSelected = updatedSelected?.copyWith(
         isApplied: true,
         appliedAt: DateTime.now(),
       );
@@ -146,7 +152,7 @@ class OpportunityController extends StateNotifier<OpportunityState> {
 
     OpportunityModel? updatedSelected = state.selectedOpportunity;
     if (updatedSelected?.id == id) {
-      updatedSelected = updatedSelected.copyWith(
+      updatedSelected = updatedSelected?.copyWith(
         hasDeadlineReminder: hasReminder,
       );
     }

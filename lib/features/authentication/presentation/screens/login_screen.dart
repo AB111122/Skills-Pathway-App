@@ -69,7 +69,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
 
     if (success && mounted) {
-      context.go(RouteNames.home);
+      final role = ref.read(authControllerProvider).currentUser?.role;
+      context.go(role == UserRole.organization
+          ? RouteNames.universityDashboard
+          : RouteNames.home);
     }
   }
 

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/theme/text_styles.dart';
@@ -11,6 +10,9 @@ import '../../../../core/widgets/loading_indicator.dart';
 import '../../../../core/widgets/stat_badge.dart';
 import '../../../../core/widgets/verified_badge.dart';
 import '../../../../models/opportunity_model.dart';
+import '../../../../models/alert_model.dart';
+import '../../../../services/alert_repository.dart';
+import '../../../../services/notification_service.dart';
 import '../controllers/opportunity_controller.dart';
 import '../widgets/apply_confirmation_dialog.dart';
 
@@ -53,6 +55,62 @@ class _OpportunityDetailScreenState
     );
   }
 
+  Future<void> _selectAlert(OpportunityModel opportunity) async {
+    final type = await showModalBottomSheet<ReminderType>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            const ListTile(title: Text('Deadline alert')),
+            for (final option in ReminderType.values)
+              ListTile(
+                title: Text(option == ReminderType.oneDay
+                    ? '1 day before'
+                    : option == ReminderType.threeDays
+                        ? '3 days before'
+                        : '7 days before'),
+                onTap: () => Navigator.pop(context, option),
+              ),
+            ListTile(
+              title: const Text('No alert'),
+              onTap: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+    );
+    try {
+      final alerts = AlertRepository();
+      if (type == null) {
+        await alerts.cancel(opportunity.id);
+        await NotificationService().cancelNotification(opportunity.id);
+      } else {
+        final alert = await alerts.save(
+          opportunityId: opportunity.id,
+          deadline: opportunity.deadline,
+          reminderType: type,
+        );
+        await NotificationService().scheduleNotification(
+          opportunityId: opportunity.id,
+          title: 'Deadline approaching',
+          message: opportunity.title,
+          scheduledDate: alert.reminderDate,
+        );
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(type == null ? 'Deadline alert removed.' : 'Deadline alert saved.')),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.toString().replaceFirst('Bad state: ', ''))),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(opportunityControllerProvider);
@@ -85,6 +143,7 @@ class _OpportunityDetailScreenState
     }
 
     final isUrgent = DateFormatter.isUrgent(opp.deadline);
+    final isClosed = opp.isClosed || !opp.deadline.isAfter(DateTime.now());
 
     return Scaffold(
       backgroundColor:
@@ -107,19 +166,7 @@ class _OpportunityDetailScreenState
             ),
             tooltip: 'Set Deadline Reminder',
             onPressed: () {
-              ref
-                  .read(opportunityControllerProvider.notifier)
-                  .toggleDeadlineReminder(opp.id);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    opp.hasDeadlineReminder
-                        ? 'Reminder removed for this deadline.'
-                        : 'Deadline reminder activated! You will receive alerts before closing.',
-                  ),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
+                  _selectAlert(opp);
             },
           ),
           // Bookmark save action
@@ -425,7 +472,13 @@ class _OpportunityDetailScreenState
 
                   // One-Tap Apply Button / Applied State
                   Expanded(
-                    child: opp.isApplied
+                    child: isClosed
+                        ? Container(
+                            height: AppDimensions.buttonHeight,
+                            alignment: Alignment.center,
+                            child: Text('Application Closed', style: AppTextStyles.labelLarge(context, color: AppColors.error)),
+                          )
+                        : opp.isApplied
                         ? Container(
                             height: AppDimensions.buttonHeight,
                             decoration: BoxDecoration(

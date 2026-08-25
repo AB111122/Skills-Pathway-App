@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/theme/text_styles.dart';
@@ -12,17 +14,42 @@ class ChatbotHomeScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final quickActions = [
-      {'title': 'Career Guidance', 'icon': Icons.explore_rounded, 'desc': 'Find suitable career paths for your degree'},
-      {'title': 'Find Internships', 'icon': Icons.work_rounded, 'desc': 'Match verified opportunities in Pakistan'},
-      {'title': 'Resume Help', 'icon': Icons.description_rounded, 'desc': 'Check for missing keywords & skills'},
-      {'title': 'Scholarships', 'icon': Icons.school_rounded, 'desc': 'Discover funded programs & deadlines'},
-      {'title': 'Market Insights', 'icon': Icons.insights_rounded, 'desc': 'Explore trending technology & job stats'},
-      {'title': 'Ask Me Anything', 'icon': Icons.auto_awesome_rounded, 'desc': 'Custom questions & advice'},
+      {
+        'title': 'Career Guidance',
+        'icon': Icons.explore_rounded,
+        'desc': 'Find suitable career paths for your degree',
+      },
+      {
+        'title': 'Find Internships',
+        'icon': Icons.work_rounded,
+        'desc': 'Match verified opportunities in Pakistan',
+      },
+      {
+        'title': 'Resume Help',
+        'icon': Icons.description_rounded,
+        'desc': 'Check for missing keywords & skills',
+      },
+      {
+        'title': 'Scholarships',
+        'icon': Icons.school_rounded,
+        'desc': 'Discover funded programs & deadlines',
+      },
+      {
+        'title': 'Market Insights',
+        'icon': Icons.insights_rounded,
+        'desc': 'Explore trending technology & job stats',
+      },
+      {
+        'title': 'Ask Me Anything',
+        'icon': Icons.auto_awesome_rounded,
+        'desc': 'Custom questions & advice',
+      },
     ];
 
     return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor: isDark
+          ? AppColors.backgroundDark
+          : AppColors.backgroundLight,
       appBar: AppBar(
         title: Row(
           children: [
@@ -54,7 +81,8 @@ class ChatbotHomeScreen extends StatelessWidget {
             children: [
               Text(
                 'How can I help you today?',
-                style: AppTextStyles.displayMedium(context).copyWith(fontSize: 22),
+                style: AppTextStyles.displayMedium(context)
+                    .copyWith(fontSize: 22),
               ),
               const SizedBox(height: 6),
               Text(
@@ -71,23 +99,21 @@ class ChatbotHomeScreen extends StatelessWidget {
               // Quick Action Grid
               Expanded(
                 child: GridView.builder(
+                  padding: const EdgeInsets.only(bottom: 12),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
-                    childAspectRatio: 1.15,
+                    childAspectRatio: 1.55,
                   ),
                   itemCount: quickActions.length,
                   itemBuilder: (context, index) {
                     final item = quickActions[index];
                     return InkWell(
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'AI Conversation engine for "${item['title']}" activates in Phase 5!',
-                            ),
-                          ),
+                        context.push(
+                          '/chatbot/conversation',
+                          extra: item['title'] as String,
                         );
                       },
                       borderRadius: AppDimensions.roundedLarge,
@@ -117,7 +143,7 @@ class ChatbotHomeScreen extends StatelessWidget {
                                 size: 20,
                               ),
                             ),
-                            const Spacer(),
+                            const SizedBox(height: 10),
                             Text(
                               item['title'] as String,
                               style: AppTextStyles.titleSmall(context),
@@ -144,7 +170,10 @@ class ChatbotHomeScreen extends StatelessWidget {
 
               // Chat Input Bar Simulation
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: isDark ? AppColors.surfaceDark : Colors.white,
                   borderRadius: AppDimensions.roundedMedium,

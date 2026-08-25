@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../constants/app_colors.dart';
 import '../constants/app_dimensions.dart';
 import '../../models/opportunity_model.dart';
@@ -70,7 +71,9 @@ class OpportunityCard extends StatelessWidget {
                       child: Center(
                         child: Text(
                           opportunity.organizationName.isNotEmpty
-                              ? opportunity.organizationName.substring(0, 1).toUpperCase()
+                              ? opportunity.organizationName
+                                    .substring(0, 1)
+                                    .toUpperCase()
                               : 'O',
                           style: AppTextStyles.titleMedium(
                             context,
@@ -120,13 +123,17 @@ class OpportunityCard extends StatelessWidget {
                                     : AppColors.textMutedLight,
                               ),
                               const SizedBox(width: 2),
-                              Text(
-                                opportunity.location,
-                                style: AppTextStyles.labelSmall(
-                                  context,
-                                  color: isDark
-                                      ? AppColors.textMutedDark
-                                      : AppColors.textMutedLight,
+                              Expanded(
+                                child: Text(
+                                  opportunity.location,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyles.labelSmall(
+                                    context,
+                                    color: isDark
+                                        ? AppColors.textMutedDark
+                                        : AppColors.textMutedLight,
+                                  ),
                                 ),
                               ),
                             ],
@@ -145,8 +152,8 @@ class OpportunityCard extends StatelessWidget {
                           color: opportunity.isSaved
                               ? AppColors.accentGold
                               : (isDark
-                                  ? AppColors.textMutedDark
-                                  : AppColors.textMutedLight),
+                                    ? AppColors.textMutedDark
+                                    : AppColors.textMutedLight),
                         ),
                         onPressed: onSaveToggle,
                         padding: EdgeInsets.zero,
@@ -167,12 +174,13 @@ class OpportunityCard extends StatelessWidget {
                 const SizedBox(height: 6),
 
                 // Short Description
-                Text(
-                  opportunity.shortDescription,
-                  maxLines: isHorizontal ? 2 : 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.bodySmall(context),
-                ),
+                if (!isHorizontal)
+                  Text(
+                    opportunity.shortDescription,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.bodySmall(context),
+                  ),
                 const SizedBox(height: 12),
 
                 // Tags & Badges
@@ -181,9 +189,9 @@ class OpportunityCard extends StatelessWidget {
                   runSpacing: 6,
                   children: [
                     StatBadge(
-                      text: opportunity.isScholarship ? 'Scholarship' : 'Internship',
+                        text: opportunity.type.label,
                       style: StatBadgeStyle.primary,
-                      icon: opportunity.isScholarship
+                      icon: opportunity.type == OpportunityType.scholarship
                           ? Icons.school_outlined
                           : Icons.work_outline_rounded,
                     ),
@@ -217,25 +225,27 @@ class OpportunityCard extends StatelessWidget {
                           color: isUrgent
                               ? AppColors.accentRose
                               : (isDark
-                                  ? AppColors.textMutedDark
-                                  : AppColors.textMutedLight),
+                                    ? AppColors.textMutedDark
+                                    : AppColors.textMutedLight),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           DateFormatter.formatDeadlineRemaining(
                             opportunity.deadline,
                           ),
-                          style: AppTextStyles.labelSmall(
-                            context,
-                            color: isUrgent
-                                ? AppColors.accentRose
-                                : (isDark
-                                    ? AppColors.textMutedDark
-                                    : AppColors.textSecondaryLight),
-                          ).copyWith(
-                            fontWeight:
-                                isUrgent ? FontWeight.w700 : FontWeight.w500,
-                          ),
+                          style:
+                              AppTextStyles.labelSmall(
+                                context,
+                                color: isUrgent
+                                    ? AppColors.accentRose
+                                    : (isDark
+                                          ? AppColors.textMutedDark
+                                          : AppColors.textSecondaryLight),
+                              ).copyWith(
+                                fontWeight: isUrgent
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                              ),
                         ),
                       ],
                     ),

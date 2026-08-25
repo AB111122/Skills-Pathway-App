@@ -9,13 +9,30 @@ import '../../features/authentication/presentation/screens/register_student_scre
 import '../../features/authentication/presentation/screens/role_selection_screen.dart';
 import '../../features/authentication/presentation/screens/splash_screen.dart';
 import '../../features/chatbot/presentation/screens/chatbot_home_screen.dart';
+import '../../features/chatbot/presentation/screens/ai_chat_screen.dart';
 import '../../features/home/presentation/screens/home_dashboard_screen.dart';
 import '../../features/home/presentation/screens/main_scaffold_screen.dart';
 import '../../features/network/presentation/screens/community_screen.dart';
 import '../../features/opportunities/presentation/screens/opportunities_screen.dart';
 import '../../features/opportunities/presentation/screens/opportunity_detail_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/profile/presentation/screens/student_applications_screen.dart';
+import '../../features/notifications/presentation/screens/notifications_screen.dart';
+import '../../features/network/presentation/screens/create_post_screen.dart';
+import '../../features/network/presentation/screens/post_details_screen.dart';
 import '../../models/user_model.dart';
+import '../../models/post_model.dart';
+import '../../models/opportunity_model.dart';
+import '../../features/authentication/presentation/controllers/auth_controller.dart';
+import '../../features/university/presentation/university_scaffold.dart';
+import '../../features/university/presentation/screens/university_dashboard_screen.dart';
+import '../../features/university/presentation/screens/university_opportunities_screen.dart';
+import '../../features/university/presentation/screens/create_opportunity_screen.dart';
+import '../../features/university/presentation/screens/university_create_post_screen.dart';
+import '../../features/university/presentation/screens/university_profile_screen.dart';
+import '../../features/university/presentation/screens/university_applications_screen.dart';
+import '../../features/university/presentation/screens/university_posts_screen.dart';
+import '../../features/university/presentation/screens/edit_university_post_screen.dart';
 import 'route_names.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
@@ -92,6 +109,102 @@ final routerProvider = Provider<GoRouter>((ref) {
           final oppId = state.pathParameters['id'] ?? '';
           return OpportunityDetailScreen(opportunityId: oppId);
         },
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: RouteNames.notifications,
+        builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: RouteNames.applications,
+        builder: (_, __) => const StudentApplicationsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/network/create',
+        builder: (context, state) => const CreatePostScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/network/post/:id',
+        builder: (context, state) => PostDetailsScreen(
+          post: state.extra as PostModel,
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/chatbot/conversation',
+        builder: (context, state) => AiChatScreen(
+          starter: state.extra as String?,
+        ),
+      ),
+
+      ShellRoute(
+        builder: (context, state, child) => UniversityScaffold(child: child),
+        routes: [
+          GoRoute(
+            path: RouteNames.universityDashboard,
+            redirect: (_, __) => ref.read(authControllerProvider).isOrganization
+                ? null
+                : RouteNames.home,
+            builder: (_, __) => const UniversityDashboardScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.universityOpportunities,
+            redirect: (_, __) => ref.read(authControllerProvider).isOrganization
+                ? null
+                : RouteNames.home,
+            builder: (_, __) => const UniversityOpportunitiesScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.universityCreateOpportunity,
+            redirect: (_, __) => ref.read(authControllerProvider).isOrganization
+                ? null
+                : RouteNames.home,
+            builder: (_, state) => CreateOpportunityScreen(
+              opportunity: state.extra as OpportunityModel?,
+            ),
+          ),
+          GoRoute(
+            path: '/university/opportunities/:id/edit',
+            redirect: (_, __) => ref.read(authControllerProvider).isOrganization ? null : RouteNames.home,
+            builder: (_, state) => CreateOpportunityScreen(
+              opportunity: state.extra as OpportunityModel?,
+            ),
+          ),
+          GoRoute(
+            path: RouteNames.universityCreatePost,
+            redirect: (_, __) => ref.read(authControllerProvider).isOrganization
+                ? null
+                : RouteNames.home,
+            builder: (_, __) => const UniversityCreatePostScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.universityPosts,
+            redirect: (_, __) => ref.read(authControllerProvider).isOrganization ? null : RouteNames.home,
+            builder: (_, __) => const UniversityPostsScreen(),
+          ),
+          GoRoute(
+            path: '/university/posts/:id/edit',
+            redirect: (_, __) => ref.read(authControllerProvider).isOrganization ? null : RouteNames.home,
+            builder: (_, state) => EditUniversityPostScreen(post: state.extra as PostModel),
+          ),
+          GoRoute(
+            path: RouteNames.universityProfile,
+            redirect: (_, __) => ref.read(authControllerProvider).isOrganization
+                ? null
+                : RouteNames.home,
+            builder: (_, __) => const UniversityProfileScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.universityApplications,
+            redirect: (_, __) => ref.read(authControllerProvider).isOrganization
+                ? null
+                : RouteNames.home,
+            builder: (_, __) => const UniversityApplicationsScreen(),
+          ),
+        ],
       ),
 
       // Shell Route for persistent Bottom Navigation

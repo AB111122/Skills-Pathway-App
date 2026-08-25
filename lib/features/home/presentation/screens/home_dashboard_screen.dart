@@ -232,12 +232,7 @@ class HomeDashboardScreen extends ConsumerWidget {
               size: 22,
             ),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Notifications Hub ready in Phase 3!'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
+              context.push(RouteNames.notifications);
             },
           ),
         ),

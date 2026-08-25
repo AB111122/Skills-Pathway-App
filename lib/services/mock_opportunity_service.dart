@@ -1,11 +1,20 @@
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/opportunity_filter_model.dart';
 import '../models/opportunity_model.dart';
+import '../models/application_model.dart';
+import 'application_repository.dart';
 import 'opportunity_service.dart';
 
 /// [MOCK IMPLEMENTATION]
 /// Provides realistic verified and unverified opportunity records for Pakistan & International pathways.
 class MockOpportunityService implements OpportunityService {
-  final List<OpportunityModel> _mockDatabase = [
+  static final MockOpportunityService instance = MockOpportunityService._internal();
+  MockOpportunityService() {}
+  MockOpportunityService._internal();
+  static const _stateKey = 'opportunity_state';
+  bool _hydrated = false;
+  static final List<OpportunityModel> _mockDatabase = [
     OpportunityModel(
       id: 'opp_hec_01',
       title: 'HEC Undergraduate Indigenous Merit Scholarship 2026',
@@ -429,10 +438,16 @@ class MockOpportunityService implements OpportunityService {
     OpportunityFilterModel? filter,
   }) async {
     await Future.delayed(const Duration(milliseconds: 400));
+    await _hydrate();
 
-    if (filter == null) return List.unmodifiable(_mockDatabase);
+    if (filter == null) {
+      return List.unmodifiable(
+        _mockDatabase.where((item) => item.status != OpportunityStatus.closed),
+      );
+    }
 
     return _mockDatabase.where((opp) {
+      if (opp.status == OpportunityStatus.closed) return false;
       // 1. Search Query
       if (filter.searchQuery.trim().isNotEmpty) {
         final query = filter.searchQuery.toLowerCase().trim();
@@ -521,6 +536,7 @@ class MockOpportunityService implements OpportunityService {
   @override
   Future<OpportunityModel?> getOpportunityById(String id) async {
     await Future.delayed(const Duration(milliseconds: 200));
+    await _hydrate();
     try {
       return _mockDatabase.firstWhere((opp) => opp.id == id);
     } catch (_) {
@@ -531,10 +547,12 @@ class MockOpportunityService implements OpportunityService {
   @override
   Future<bool> toggleSaveOpportunity(String id) async {
     await Future.delayed(const Duration(milliseconds: 150));
+    await _hydrate();
     final index = _mockDatabase.indexWhere((opp) => opp.id == id);
     if (index != -1) {
       final current = _mockDatabase[index];
       _mockDatabase[index] = current.copyWith(isSaved: !current.isSaved);
+      await _persist();
       return _mockDatabase[index].isSaved;
     }
     return false;
@@ -543,13 +561,32 @@ class MockOpportunityService implements OpportunityService {
   @override
   Future<bool> markAsApplied(String id) async {
     await Future.delayed(const Duration(milliseconds: 150));
+    await _hydrate();
     final index = _mockDatabase.indexWhere((opp) => opp.id == id);
     if (index != -1) {
       final current = _mockDatabase[index];
+      if (current.isClosed || current.deadline.isBefore(DateTime.now())) return false;
+      final existing = await MockApplicationRepository.instance.findForStudentAndOpportunity('usr_student_01', id);
+      if (existing != null) return false;
       _mockDatabase[index] = current.copyWith(
         isApplied: true,
         appliedAt: DateTime.now(),
       );
+      if (current.organizationId != null) {
+        await MockApplicationRepository.instance.create(
+          ApplicationModel(
+            id: 'application-$id-usr_student_01',
+            studentId: 'usr_student_01',
+            studentName: 'Fatima Zahra',
+            opportunityId: current.id,
+            opportunityTitle: current.title,
+            universityId: current.organizationId!,
+            universityName: current.organizationName,
+            applicationDate: DateTime.now(),
+          ),
+        );
+      }
+      await _persist();
       return true;
     }
     return false;
@@ -558,12 +595,14 @@ class MockOpportunityService implements OpportunityService {
   @override
   Future<bool> toggleDeadlineReminder(String id) async {
     await Future.delayed(const Duration(milliseconds: 150));
+    await _hydrate();
     final index = _mockDatabase.indexWhere((opp) => opp.id == id);
     if (index != -1) {
       final current = _mockDatabase[index];
       _mockDatabase[index] = current.copyWith(
         hasDeadlineReminder: !current.hasDeadlineReminder,
       );
+      await _persist();
       return _mockDatabase[index].hasDeadlineReminder;
     }
     return false;
@@ -572,12 +611,127 @@ class MockOpportunityService implements OpportunityService {
   @override
   Future<List<OpportunityModel>> getSavedOpportunities() async {
     await Future.delayed(const Duration(milliseconds: 200));
+    await _hydrate();
     return _mockDatabase.where((opp) => opp.isSaved).toList();
   }
 
   @override
   Future<List<OpportunityModel>> getAppliedOpportunities() async {
     await Future.delayed(const Duration(milliseconds: 200));
+    await _hydrate();
     return _mockDatabase.where((opp) => opp.isApplied).toList();
+  }
+
+  Future<List<OpportunityModel>> getManagedOpportunities(String organizationId) async {
+    await _hydrate();
+    return _mockDatabase.where((item) => item.organizationId == organizationId).toList();
+  }
+
+  Future<void> _hydrate() async {
+    if (_hydrated) return;
+    List<String> stored;
+    try {
+      final preferences = await SharedPreferences.getInstance().timeout(
+        const Duration(milliseconds: 100),
+      );
+      stored = preferences.getStringList(_stateKey) ?? [];
+    } catch (_) {
+      stored = [];
+    }
+    final savedById = <String, OpportunityModel>{};
+    for (final value in stored) {
+      final json = jsonDecode(value) as Map<String, dynamic>;
+      final opportunity = OpportunityModel.fromJson(json);
+      savedById[opportunity.id] = opportunity;
+    }
+    for (var index = 0; index < _mockDatabase.length; index++) {
+      final saved = savedById[_mockDatabase[index].id];
+      if (saved != null) {
+        _mockDatabase[index] = _mockDatabase[index].copyWith(
+          isSaved: saved.isSaved,
+          isApplied: saved.isApplied,
+          appliedAt: saved.appliedAt,
+          hasDeadlineReminder: saved.hasDeadlineReminder,
+        );
+      }
+    }
+    _hydrated = true;
+  }
+
+  Future<void> _persist() async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      await preferences.setStringList(
+        _stateKey,
+        _mockDatabase.map((opp) => jsonEncode(opp.toJson())).toList(),
+      );
+    } catch (_) {
+      // The in-memory mock remains usable in unit-test environments.
+    }
+  }
+
+  Future<OpportunityModel> createUniversityOpportunity({
+    required String organizationId,
+    required String organizationName,
+    required String title,
+    required String description,
+    required OpportunityType type,
+    required DateTime deadline,
+    required String location,
+    required String applicationUrl,
+  }) async {
+    final item = OpportunityModel(
+      id: 'university-${DateTime.now().microsecondsSinceEpoch}',
+      title: title,
+      organizationName: organizationName,
+      organizationId: organizationId,
+      createdBy: organizationId,
+      type: type,
+      location: location,
+      deadline: deadline,
+      isVerified: false,
+      isPaid: type == OpportunityType.internship,
+      stipendOrFunding: 'See opportunity details',
+      shortDescription: description,
+      fullDescription: description,
+      officialUrl: applicationUrl,
+      requiredSkills: const [],
+      eligibleFields: const [],
+      createdAt: DateTime.now(),
+    );
+    _mockDatabase.insert(0, item);
+    await _persist();
+    return item;
+  }
+
+  Future<void> updateUniversityOpportunity(
+    String organizationId,
+    OpportunityModel updated,
+  ) async {
+    final index = _mockDatabase.indexWhere((item) => item.id == updated.id);
+    if (index < 0) throw StateError('Opportunity not found.');
+    if (_mockDatabase[index].organizationId != organizationId) {
+      throw StateError('You can only manage your own opportunities.');
+    }
+    _mockDatabase[index] = updated;
+    await _persist();
+  }
+
+  Future<void> closeUniversityOpportunity(String organizationId, String id) async {
+    final item = await getOpportunityById(id);
+    if (item == null) throw StateError('Opportunity not found.');
+    await updateUniversityOpportunity(
+      organizationId,
+      item.copyWith(status: OpportunityStatus.closed),
+    );
+  }
+
+  Future<void> deleteUniversityOpportunity(String organizationId, String id) async {
+    final item = await getOpportunityById(id);
+    if (item == null || item.organizationId != organizationId) {
+      throw StateError('You can only manage your own opportunities.');
+    }
+    _mockDatabase.removeWhere((opportunity) => opportunity.id == id);
+    await _persist();
   }
 }

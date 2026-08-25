@@ -211,6 +211,14 @@ class ProfileScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               _buildActionTile(
                 context,
+                icon: Icons.assignment_outlined,
+                title: 'My Applications',
+                subtitle: 'Track the status of submitted applications',
+                onTap: () => context.go(RouteNames.applications),
+              ),
+              const SizedBox(height: 8),
+              _buildActionTile(
+                context,
                 icon: Icons.auto_awesome_outlined,
                 title: 'Career Roadmap & Insights',
                 subtitle: 'Personalized learning steps and skill gaps',
