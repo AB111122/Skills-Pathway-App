@@ -1,10 +1,12 @@
 import '../../../models/organization_model.dart';
 import '../../../models/student_profile_model.dart';
 import '../../../models/user_model.dart';
+import 'dart:async';
 
 /// Service abstraction for Authentication.
 /// Can be replaced with a real Firebase / REST API Auth implementation in Phase 9.
 abstract class AuthService {
+  Stream<UserModel?> get authStateChanges;
   Future<UserModel> login({required String email, required String password});
   Future<UserModel> registerStudent({
     required String fullName,
@@ -88,6 +90,11 @@ class MockAuthService implements AuthService {
   UserModel? _currentUser;
   StudentProfileModel? _currentStudentProfile;
   OrganizationModel? _currentOrgProfile;
+  final StreamController<UserModel?> _authStateController =
+      StreamController<UserModel?>.broadcast();
+
+  @override
+  Stream<UserModel?> get authStateChanges => _authStateController.stream;
 
   @override
   Future<UserModel> login({
@@ -101,6 +108,7 @@ class MockAuthService implements AuthService {
     if (normalizedEmail.contains('org') || normalizedEmail.contains('nust.edu.pk') && normalizedEmail.startsWith('admissions')) {
       _currentUser = _mockOrgUser;
       _currentOrgProfile = _mockOrgProfile;
+      _authStateController.add(_currentUser);
       return _mockOrgUser;
     } else {
       // Default to student login
@@ -111,6 +119,7 @@ class MockAuthService implements AuthService {
       _currentStudentProfile = _mockStudentProfile.copyWith(
         fullName: _currentUser!.name,
       );
+      _authStateController.add(_currentUser);
       return _currentUser!;
     }
   }
@@ -154,6 +163,7 @@ class MockAuthService implements AuthService {
 
     _currentUser = newUser;
     _currentStudentProfile = newProfile;
+    _authStateController.add(newUser);
     return newUser;
   }
 
@@ -191,6 +201,7 @@ class MockAuthService implements AuthService {
 
     _currentUser = newUser;
     _currentOrgProfile = newOrg;
+    _authStateController.add(newUser);
     return newUser;
   }
 
@@ -206,6 +217,7 @@ class MockAuthService implements AuthService {
     _currentUser = null;
     _currentStudentProfile = null;
     _currentOrgProfile = null;
+    _authStateController.add(null);
   }
 
   @override

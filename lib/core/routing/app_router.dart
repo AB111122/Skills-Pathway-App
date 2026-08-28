@@ -52,6 +52,24 @@ final routerProvider = Provider<GoRouter>((ref) {
     navigatorKey: rootNavigatorKey,
     initialLocation: RouteNames.splash,
     debugLogDiagnostics: false,
+    redirect: (_, state) {
+      final auth = ref.read(authControllerProvider);
+      final path = state.uri.path;
+      final isUniversityRoute = path.startsWith('/university/');
+      final isStudentRoute = path == RouteNames.home ||
+          path == RouteNames.opportunities ||
+          path == RouteNames.network ||
+          path == RouteNames.chatbot ||
+          path == RouteNames.profile ||
+          path == RouteNames.applications;
+      if (auth.isOrganization && isStudentRoute) {
+        return RouteNames.universityDashboard;
+      }
+      if (auth.isStudent && isUniversityRoute) {
+        return RouteNames.home;
+      }
+      return null;
+    },
     routes: [
       // Splash Screen
       GoRoute(

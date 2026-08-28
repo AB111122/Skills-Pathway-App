@@ -41,6 +41,9 @@ dependencies:
   percent_indicator: ^4.2.3
   uuid: ^4.4.0
   cupertino_icons: ^1.0.8
+  firebase_core: ^4.14.0
+  firebase_auth: ^6.6.1
+  cloud_firestore: ^6.9.0
 
 dev_dependencies:
   flutter_test:

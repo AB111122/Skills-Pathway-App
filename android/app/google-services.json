@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "146652436697",
+    "project_id": "skills-pathway-app",
+    "storage_bucket": "skills-pathway-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:146652436697:android:7c28bd5bddd042e2d306c8",
+        "android_client_info": {
+          "package_name": "com.skillspathway.app.skills_pathway_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArQ_kNEaQSevhJWVwkJ_718Ggei3GMBYM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

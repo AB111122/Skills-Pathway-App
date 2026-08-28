@@ -1,12 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_core/firebase_core.dart';
 import '../../../../models/opportunity_filter_model.dart';
 import '../../../../models/opportunity_model.dart';
+import '../../../../services/firebase_opportunity_service.dart';
 import '../../../../services/mock_opportunity_service.dart';
 import '../../../../services/opportunity_service.dart';
 import '../../domain/opportunity_state.dart';
 
 final opportunityServiceProvider = Provider<OpportunityService>((ref) {
-  return MockOpportunityService();
+  return Firebase.apps.isEmpty
+      ? MockOpportunityService()
+      : FirebaseOpportunityService();
 });
 
 final opportunityControllerProvider =

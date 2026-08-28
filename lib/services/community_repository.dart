@@ -12,6 +12,7 @@ abstract class CommunityRepository {
   Future<PostModel> toggleFollowAuthor(String postId);
   Future<void> reportPost(String postId, String reason);
   List<PostModel> postsForAuthor(String authorId);
+  Future<List<PostModel>> getPostsByAuthor(String authorId);
   Future<PostModel> updateUniversityPost(String universityId, PostModel post);
   Future<void> deleteUniversityPost(String universityId, String postId);
 }
@@ -32,6 +33,10 @@ class MockCommunityRepository implements CommunityRepository {
   final Uuid _uuid = const Uuid();
 
   List<PostModel> postsForAuthor(String authorId) => _posts.where((post) => post.authorId == authorId).toList();
+
+  @override
+  Future<List<PostModel>> getPostsByAuthor(String authorId) async =>
+      postsForAuthor(authorId);
 
   @override
   Future<List<PostModel>> getPosts({String? topic}) async => _posts.where((post) => post.status == PostStatus.approved && (topic == null || post.topic == topic)).toList();

@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_core/firebase_core.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../services/community_repository.dart';
+import '../../../../services/firebase_community_repository.dart';
+import '../../../../services/community_repository.dart';
 
-final communityRepositoryProvider = Provider<CommunityRepository>((ref) => MockCommunityRepository.instance);
+final communityRepositoryProvider =
+  Provider<CommunityRepository>((ref) => Firebase.apps.isEmpty
+    ? MockCommunityRepository.instance
+    : FirebaseCommunityRepository());
 
 class CreatePostScreen extends ConsumerStatefulWidget {
   const CreatePostScreen({super.key});

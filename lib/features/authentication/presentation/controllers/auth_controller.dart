@@ -1,9 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_core/firebase_core.dart';
+import '../../../../models/user_model.dart';
 import '../../domain/auth_state.dart';
+import '../../data/firebase_auth_service.dart';
 import '../../data/mock_auth_service.dart';
 
 final authServiceProvider = Provider<AuthService>((ref) {
-  return MockAuthService();
+  return Firebase.apps.isEmpty ? MockAuthService() : FirebaseAuthService();
 });
 
 final authControllerProvider =
@@ -15,7 +18,24 @@ final authControllerProvider =
 class AuthController extends StateNotifier<AuthState> {
   final AuthService _authService;
 
-  AuthController(this._authService) : super(const AuthState());
+  AuthController(this._authService) : super(const AuthState()) {
+    _authService.authStateChanges.listen(_restoreSession);
+  }
+
+  Future<void> _restoreSession(UserModel? user) async {
+    if (user == null) {
+      if (state.isAuthenticated) state = const AuthState();
+      return;
+    }
+    state = state.copyWith(isAuthenticated: true, currentUser: user);
+    final studentProfile = await _authService.getStudentProfile(user.id);
+    final organizationProfile =
+        await _authService.getOrganizationProfile(user.id);
+    state = state.copyWith(
+      studentProfile: studentProfile,
+      organizationProfile: organizationProfile,
+    );
+  }
 
   /// Sets whether the user has finished onboarding.
   void completeOnboarding() {
@@ -45,7 +65,7 @@ class AuthController extends StateNotifier<AuthState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: e.toString(),
+        errorMessage: _friendlyError(e),
       );
       return false;
     }
@@ -107,7 +127,7 @@ class AuthController extends StateNotifier<AuthState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: e.toString(),
+        errorMessage: _friendlyError(e),
       );
       return false;
     }
@@ -147,7 +167,7 @@ class AuthController extends StateNotifier<AuthState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: e.toString(),
+        errorMessage: _friendlyError(e),
       );
       return false;
     }
@@ -163,7 +183,7 @@ class AuthController extends StateNotifier<AuthState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: e.toString(),
+        errorMessage: _friendlyError(e),
       );
       return false;
     }
@@ -174,4 +194,8 @@ class AuthController extends StateNotifier<AuthState> {
     await _authService.logout();
     state = const AuthState();
   }
+
+  String _friendlyError(Object error) => error
+      .toString()
+      .replaceFirst(RegExp(r'^(Exception|StateError): '), '');
 }

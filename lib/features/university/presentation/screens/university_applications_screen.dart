@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../models/application_model.dart';
 import '../../../../models/opportunity_model.dart';
+import '../../../authentication/presentation/controllers/auth_controller.dart';
 import '../university_provider.dart';
 
 class UniversityApplicationsScreen extends ConsumerStatefulWidget {
@@ -18,7 +19,8 @@ class _UniversityApplicationsScreenState extends ConsumerState<UniversityApplica
   @override
   void initState() {
     super.initState();
-    _opportunities = ref.read(universityRepositoryProvider).getOwnedOpportunities('prof_org_01');
+    final organizationId = ref.read(authControllerProvider).currentUser?.id ?? '';
+    _opportunities = ref.read(universityRepositoryProvider).getOwnedOpportunities(organizationId);
   }
 
   @override
@@ -33,7 +35,7 @@ class _UniversityApplicationsScreenState extends ConsumerState<UniversityApplica
           final selected = _selected ?? (opportunities.isEmpty ? null : opportunities.first);
           if (selected == null) return const Center(child: Text('No university opportunities yet.'));
           return FutureBuilder<List<ApplicationModel>>(
-            future: ref.read(universityRepositoryProvider).getApplicants('prof_org_01', selected.id),
+            future: ref.read(universityRepositoryProvider).getApplicants(ref.read(authControllerProvider).currentUser?.id ?? '', selected.id),
             builder: (context, applicants) {
               final records = applicants.data ?? [];
               return ListView(
@@ -56,7 +58,7 @@ class _UniversityApplicationsScreenState extends ConsumerState<UniversityApplica
                         value: application.status,
                         onChanged: (status) async {
                           if (status == null) return;
-                          await ref.read(universityRepositoryProvider).updateApplicationStatus('prof_org_01', application.id, status);
+                          await ref.read(universityRepositoryProvider).updateApplicationStatus(ref.read(authControllerProvider).currentUser?.id ?? '', application.id, status);
                           setState(() {});
                         },
                         items: ApplicationStatus.values.map((status) => DropdownMenuItem(value: status, child: Text(status.name))).toList(),
