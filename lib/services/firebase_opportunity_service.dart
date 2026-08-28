@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import '../models/application_model.dart';
 import '../models/opportunity_filter_model.dart';
 import '../models/opportunity_model.dart';
@@ -13,9 +14,9 @@ class FirebaseOpportunityService implements OpportunityService {
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
     ApplicationRepository? applications,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance,
-        _applications = applications ?? FirebaseApplicationRepository();
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _auth = auth ?? FirebaseAuth.instance,
+       _applications = applications ?? FirebaseApplicationRepository();
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
@@ -60,7 +61,10 @@ class FirebaseOpportunityService implements OpportunityService {
       await reference.delete();
       return false;
     }
-    await reference.set({'opportunityId': id, 'savedAt': FieldValue.serverTimestamp()});
+    await reference.set({
+      'opportunityId': id,
+      'savedAt': FieldValue.serverTimestamp(),
+    });
     return true;
   }
 
@@ -73,22 +77,27 @@ class FirebaseOpportunityService implements OpportunityService {
         opportunity.deadline.isBefore(DateTime.now())) {
       return false;
     }
-    if (await _applications.findForStudentAndOpportunity(user.uid, id) != null) {
+    if (await _applications.findForStudentAndOpportunity(user.uid, id) !=
+        null) {
       return false;
     }
     final profile = await _firestore.collection('users').doc(user.uid).get();
     final data = profile.data() ?? const <String, dynamic>{};
-    await _applications.create(ApplicationModel(
-      id: '${user.uid}_$id',
-      studentId: user.uid,
-      studentName: data['name'] as String? ?? user.displayName ?? '',
-      opportunityId: id,
-      opportunityTitle: opportunity.title,
-      universityId: opportunity.organizationId ?? '',
-      universityName: opportunity.organizationName,
-      applicationDate: DateTime.now(),
-    ));
-    await _opportunities.doc(id).update({'applicationCount': FieldValue.increment(1)});
+    await _applications.create(
+      ApplicationModel(
+        id: '${user.uid}_$id',
+        studentId: user.uid,
+        studentName: data['name'] as String? ?? user.displayName ?? '',
+        opportunityId: id,
+        opportunityTitle: opportunity.title,
+        universityId: opportunity.organizationId ?? '',
+        universityName: opportunity.organizationName,
+        applicationDate: DateTime.now(),
+      ),
+    );
+    await _opportunities.doc(id).update({
+      'applicationCount': FieldValue.increment(1),
+    });
     return true;
   }
 
@@ -105,7 +114,10 @@ class FirebaseOpportunityService implements OpportunityService {
       await reference.delete();
       return false;
     }
-    await reference.set({'opportunityId': id, 'createdAt': FieldValue.serverTimestamp()});
+    await reference.set({
+      'opportunityId': id,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
     return true;
   }
 
@@ -133,16 +145,20 @@ class FirebaseOpportunityService implements OpportunityService {
     for (final application in applications) {
       final opportunity = await getOpportunityById(application.opportunityId);
       if (opportunity != null) {
-        items.add(opportunity.copyWith(
-          isApplied: true,
-          appliedAt: application.applicationDate,
-        ));
+        items.add(
+          opportunity.copyWith(
+            isApplied: true,
+            appliedAt: application.applicationDate,
+          ),
+        );
       }
     }
     return items;
   }
 
-  Future<List<OpportunityModel>> getManagedOpportunities(String organizationId) async {
+  Future<List<OpportunityModel>> getManagedOpportunities(
+    String organizationId,
+  ) async {
     _requireOrganization(organizationId);
     final snapshot = await _opportunities
         .where('organizationId', isEqualTo: organizationId)
@@ -193,7 +209,10 @@ class FirebaseOpportunityService implements OpportunityService {
     await _opportunities.doc(updated.id).update(_toFirestore(updated));
   }
 
-  Future<void> closeUniversityOpportunity(String organizationId, String id) async {
+  Future<void> closeUniversityOpportunity(
+    String organizationId,
+    String id,
+  ) async {
     _requireOrganization(organizationId);
     await _opportunities.doc(id).update({
       'status': OpportunityStatus.closed.name,
@@ -201,7 +220,10 @@ class FirebaseOpportunityService implements OpportunityService {
     });
   }
 
-  Future<void> deleteUniversityOpportunity(String organizationId, String id) async {
+  Future<void> deleteUniversityOpportunity(
+    String organizationId,
+    String id,
+  ) async {
     _requireOrganization(organizationId);
     await _opportunities.doc(id).delete();
   }
@@ -219,7 +241,9 @@ class FirebaseOpportunityService implements OpportunityService {
     }
   }
 
-  OpportunityModel _fromSnapshot(DocumentSnapshot<Map<String, dynamic>> snapshot) {
+  OpportunityModel _fromSnapshot(
+    DocumentSnapshot<Map<String, dynamic>> snapshot,
+  ) {
     return FirestoreSerializers.opportunityFromMap(
       snapshot.data() ?? {},
       id: snapshot.id,
@@ -233,9 +257,16 @@ class FirebaseOpportunityService implements OpportunityService {
   Future<OpportunityModel> _withStudentState(OpportunityModel item) async {
     final user = _auth.currentUser;
     if (user == null) return item;
-    final saved = await _firestore.collection('users').doc(user.uid)
-        .collection('savedOpportunities').doc(item.id).get();
-    final application = await _applications.findForStudentAndOpportunity(user.uid, item.id);
+    final saved = await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('savedOpportunities')
+        .doc(item.id)
+        .get();
+    final application = await _applications.findForStudentAndOpportunity(
+      user.uid,
+      item.id,
+    );
     return item.copyWith(
       isSaved: saved.exists,
       isApplied: application != null,
@@ -251,11 +282,29 @@ class FirebaseOpportunityService implements OpportunityService {
     return items.where((opp) {
       final query = filter.searchQuery.toLowerCase().trim();
       if (query.isNotEmpty &&
-          !('${opp.title} ${opp.organizationName} ${opp.shortDescription} ${opp.requiredSkills.join(' ')} ${opp.eligibleFields.join(' ')}'.toLowerCase().contains(query))) return false;
-      if (filter.opportunityType != null && opp.type != filter.opportunityType) return false;
-      if (filter.location != null && filter.location != 'All' && !opp.location.toLowerCase().contains(filter.location!.toLowerCase())) return false;
-      if (filter.field != null && filter.field != 'All' && !opp.eligibleFields.any((value) => value.toLowerCase().contains(filter.field!.toLowerCase()))) return false;
-      if (filter.degreeLevel != null && filter.degreeLevel != 'All' && !(opp.degreeLevel ?? '').toLowerCase().contains(filter.degreeLevel!.toLowerCase())) return false;
+          !('${opp.title} ${opp.organizationName} ${opp.shortDescription} ${opp.requiredSkills.join(' ')} ${opp.eligibleFields.join(' ')}'
+              .toLowerCase()
+              .contains(query)))
+        return false;
+      if (filter.opportunityType != null && opp.type != filter.opportunityType)
+        return false;
+      if (filter.location != null &&
+          filter.location != 'All' &&
+          !opp.location.toLowerCase().contains(filter.location!.toLowerCase()))
+        return false;
+      if (filter.field != null &&
+          filter.field != 'All' &&
+          !opp.eligibleFields.any(
+            (value) =>
+                value.toLowerCase().contains(filter.field!.toLowerCase()),
+          ))
+        return false;
+      if (filter.degreeLevel != null &&
+          filter.degreeLevel != 'All' &&
+          !(opp.degreeLevel ?? '').toLowerCase().contains(
+            filter.degreeLevel!.toLowerCase(),
+          ))
+        return false;
       if (filter.isPaidOnly && (!opp.isInternship || !opp.isPaid)) return false;
       if (filter.isVerifiedOnly && !opp.isVerified) return false;
       return true;

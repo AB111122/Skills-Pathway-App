@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+
 import '../models/application_model.dart';
 import '../models/opportunity_model.dart';
 import '../models/post_model.dart';
@@ -11,10 +12,10 @@ import 'university_portal_repository.dart';
 
 class FirebaseUniversityPortalRepository implements UniversityPortalRepository {
   FirebaseUniversityPortalRepository({FirebaseAuth? auth})
-      : _auth = auth ?? FirebaseAuth.instance,
-        _opportunities = FirebaseOpportunityService(auth: auth),
-        _applications = FirebaseApplicationRepository(auth: auth),
-        _community = FirebaseCommunityRepository(auth: auth);
+    : _auth = auth ?? FirebaseAuth.instance,
+      _opportunities = FirebaseOpportunityService(auth: auth),
+      _applications = FirebaseApplicationRepository(auth: auth),
+      _community = FirebaseCommunityRepository(auth: auth);
 
   final FirebaseAuth _auth;
   final FirebaseOpportunityService _opportunities;
@@ -39,19 +40,21 @@ class FirebaseUniversityPortalRepository implements UniversityPortalRepository {
     String eligibility = '',
     String contactEmail = '',
   }) => _opportunities.createUniversityOpportunity(
-        organizationId: organizationId,
-        organizationName: organizationName,
-        title: title,
-        description: description,
-        type: type,
-        deadline: deadline,
-        location: location,
-        applicationUrl: applicationUrl,
-      );
+    organizationId: organizationId,
+    organizationName: organizationName,
+    title: title,
+    description: description,
+    type: type,
+    deadline: deadline,
+    location: location,
+    applicationUrl: applicationUrl,
+  );
 
   @override
-  Future<void> updateOpportunity(String organizationId, OpportunityModel opportunity) =>
-      _opportunities.updateUniversityOpportunity(organizationId, opportunity);
+  Future<void> updateOpportunity(
+    String organizationId,
+    OpportunityModel opportunity,
+  ) => _opportunities.updateUniversityOpportunity(organizationId, opportunity);
 
   @override
   Future<void> deleteOpportunity(String organizationId, String opportunityId) =>
@@ -69,7 +72,9 @@ class FirebaseUniversityPortalRepository implements UniversityPortalRepository {
     _requireOwner(organizationId);
     final opportunity = await _opportunities.getOpportunityById(opportunityId);
     if (opportunity?.organizationId != organizationId) {
-      throw StateError('You can only view applicants for your own opportunities.');
+      throw StateError(
+        'You can only view applicants for your own opportunities.',
+      );
     }
     return _applications.forOpportunity(opportunityId);
   }
@@ -90,9 +95,13 @@ class FirebaseUniversityPortalRepository implements UniversityPortalRepository {
     }
     final posts = await _community.getPostsByAuthor(organizationId);
     return UniversityStats(
-      activeOpportunities: owned.where((item) =>
-          item.status != OpportunityStatus.closed &&
-          item.deadline.isAfter(DateTime.now())).length,
+      activeOpportunities: owned
+          .where(
+            (item) =>
+                item.status != OpportunityStatus.closed &&
+                item.deadline.isAfter(DateTime.now()),
+          )
+          .length,
       totalApplications: applications.length,
       pendingApplications: applications
           .where((item) => item.status == ApplicationStatus.pending)
@@ -113,12 +122,12 @@ class FirebaseUniversityPortalRepository implements UniversityPortalRepository {
     required String content,
     required String category,
   }) => _community.createUniversityPost(
-        universityId: organizationId,
-        universityName: universityName,
-        title: title,
-        content: content,
-        topic: category,
-      );
+    universityId: organizationId,
+    universityName: universityName,
+    title: title,
+    content: content,
+    topic: category,
+  );
 
   void _requireOwner(String organizationId) {
     if (_auth.currentUser?.uid != organizationId) {

@@ -1,15 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uuid/uuid.dart';
+
 import '../models/comment_model.dart';
 import '../models/post_model.dart';
 import 'community_repository.dart';
 import 'firestore_serializers.dart';
 
 class FirebaseCommunityRepository implements CommunityRepository {
-  FirebaseCommunityRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
-      : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+  FirebaseCommunityRepository({
+    FirebaseFirestore? firestore,
+    FirebaseAuth? auth,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _auth = auth ?? FirebaseAuth.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
@@ -131,7 +134,10 @@ class FirebaseCommunityRepository implements CommunityRepository {
       await like.delete();
       await post.update({'likesCount': FieldValue.increment(-1)});
     } else {
-      await like.set({'userId': user.uid, 'createdAt': FieldValue.serverTimestamp()});
+      await like.set({
+        'userId': user.uid,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
       await post.update({'likesCount': FieldValue.increment(1)});
     }
     return _fromSnapshot(await post.get());
@@ -141,12 +147,18 @@ class FirebaseCommunityRepository implements CommunityRepository {
   Future<PostModel> toggleFollowAuthor(String postId) async {
     final user = _requireUser();
     final post = _fromSnapshot(await _posts.doc(postId).get());
-    final follow = _firestore.collection('follows').doc('${user.uid}_${post.authorId}');
+    final follow = _firestore
+        .collection('follows')
+        .doc('${user.uid}_${post.authorId}');
     final following = await follow.get();
     if (following.exists) {
       await follow.delete();
     } else {
-      await follow.set({'followerId': user.uid, 'authorId': post.authorId, 'createdAt': FieldValue.serverTimestamp()});
+      await follow.set({
+        'followerId': user.uid,
+        'authorId': post.authorId,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
     }
     return post.copyWith(isFollowingAuthor: !following.exists);
   }
@@ -168,9 +180,14 @@ class FirebaseCommunityRepository implements CommunityRepository {
   }
 
   @override
-  Future<PostModel> updateUniversityPost(String universityId, PostModel post) async {
+  Future<PostModel> updateUniversityPost(
+    String universityId,
+    PostModel post,
+  ) async {
     final user = _requireUser();
-    if (user.uid != universityId || post.authorId != universityId || post.authorType != 'university') {
+    if (user.uid != universityId ||
+        post.authorId != universityId ||
+        post.authorType != 'university') {
       throw StateError('You can only edit your own university posts.');
     }
     await _posts.doc(post.id).update({
@@ -185,13 +202,16 @@ class FirebaseCommunityRepository implements CommunityRepository {
   Future<void> deleteUniversityPost(String universityId, String postId) async {
     final user = _requireUser();
     final post = _fromSnapshot(await _posts.doc(postId).get());
-    if (user.uid != universityId || post.authorId != universityId || post.authorType != 'university') {
+    if (user.uid != universityId ||
+        post.authorId != universityId ||
+        post.authorType != 'university') {
       throw StateError('You can only delete your own university posts.');
     }
     await _posts.doc(postId).delete();
   }
 
-  User _requireUser() => _auth.currentUser ?? (throw StateError('Please sign in first.'));
+  User _requireUser() =>
+      _auth.currentUser ?? (throw StateError('Please sign in first.'));
 
   Future<Map<String, dynamic>> _profile(String uid) async =>
       (await _firestore.collection('users').doc(uid).get()).data() ?? {};
@@ -201,9 +221,21 @@ class FirebaseCommunityRepository implements CommunityRepository {
     if (user == null) return items;
     final result = <PostModel>[];
     for (final post in items) {
-      final liked = await _posts.doc(post.id).collection('likes').doc(user.uid).get();
-      final followed = await _firestore.collection('follows').doc('${user.uid}_${post.authorId}').get();
-      result.add(post.copyWith(isLiked: liked.exists, isFollowingAuthor: followed.exists));
+      final liked = await _posts
+          .doc(post.id)
+          .collection('likes')
+          .doc(user.uid)
+          .get();
+      final followed = await _firestore
+          .collection('follows')
+          .doc('${user.uid}_${post.authorId}')
+          .get();
+      result.add(
+        post.copyWith(
+          isLiked: liked.exists,
+          isFollowingAuthor: followed.exists,
+        ),
+      );
     }
     return result;
   }
@@ -227,15 +259,18 @@ class FirebaseCommunityRepository implements CommunityRepository {
       authorName: data['authorName'] as String? ?? '',
       content: data['content'] as String? ?? '',
       createdAt: _date(data['createdAt']) ?? DateTime.now(),
-      status: CommentStatus.values.firstWhere((value) => value.name == data['status'], orElse: () => CommentStatus.approved),
+      status: CommentStatus.values.firstWhere(
+        (value) => value.name == data['status'],
+        orElse: () => CommentStatus.approved,
+      ),
     );
   }
 
   DateTime? _date(Object? value) => value is Timestamp
       ? value.toDate()
       : value is DateTime
-          ? value
-          : value is String
-              ? DateTime.tryParse(value)
-              : null;
+      ? value
+      : value is String
+      ? DateTime.tryParse(value)
+      : null;
 }

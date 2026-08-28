@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+
 import '../../../../models/opportunity_filter_model.dart';
 import '../../../../models/opportunity_model.dart';
 import '../../../../services/firebase_opportunity_service.dart';
@@ -15,9 +16,9 @@ final opportunityServiceProvider = Provider<OpportunityService>((ref) {
 
 final opportunityControllerProvider =
     StateNotifierProvider<OpportunityController, OpportunityState>((ref) {
-  final service = ref.watch(opportunityServiceProvider);
-  return OpportunityController(service);
-});
+      final service = ref.watch(opportunityServiceProvider);
+      return OpportunityController(service);
+    });
 
 class OpportunityController extends StateNotifier<OpportunityState> {
   final OpportunityService _service;
@@ -77,10 +78,7 @@ class OpportunityController extends StateNotifier<OpportunityState> {
     state = state.copyWith(isLoading: true);
     try {
       final item = await _service.getOpportunityById(id);
-      state = state.copyWith(
-        isLoading: false,
-        selectedOpportunity: item,
-      );
+      state = state.copyWith(isLoading: false, selectedOpportunity: item);
       return item;
     } catch (e) {
       state = state.copyWith(
@@ -121,10 +119,7 @@ class OpportunityController extends StateNotifier<OpportunityState> {
 
     final updatedList = state.opportunities.map((opp) {
       if (opp.id == id) {
-        return opp.copyWith(
-          isApplied: true,
-          appliedAt: DateTime.now(),
-        );
+        return opp.copyWith(isApplied: true, appliedAt: DateTime.now());
       }
       return opp;
     }).toList();

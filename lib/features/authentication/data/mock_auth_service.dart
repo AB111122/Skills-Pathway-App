@@ -1,6 +1,7 @@
 import '../../../models/organization_model.dart';
 import '../../../models/student_profile_model.dart';
 import '../../../models/user_model.dart';
+
 import 'dart:async';
 
 /// Service abstraction for Authentication.
@@ -58,8 +59,19 @@ class MockAuthService implements AuthService {
     universityOrCollege: 'National University of Sciences & Technology (NUST)',
     gpa: 3.82,
     graduationYear: 2026,
-    skills: ['Flutter', 'Python', 'Machine Learning', 'Data Structures', 'SQL', 'FastAPI'],
-    careerInterests: ['AI Engineer', 'Mobile App Developer', 'Tech Entrepreneurship'],
+    skills: [
+      'Flutter',
+      'Python',
+      'Machine Learning',
+      'Data Structures',
+      'SQL',
+      'FastAPI',
+    ],
+    careerInterests: [
+      'AI Engineer',
+      'Mobile App Developer',
+      'Tech Entrepreneurship',
+    ],
     city: 'Islamabad, Pakistan',
     completionPercentage: 0.85,
   );
@@ -105,7 +117,9 @@ class MockAuthService implements AuthService {
 
     final normalizedEmail = email.trim().toLowerCase();
 
-    if (normalizedEmail.contains('org') || normalizedEmail.contains('nust.edu.pk') && normalizedEmail.startsWith('admissions')) {
+    if (normalizedEmail.contains('org') ||
+        normalizedEmail.contains('nust.edu.pk') &&
+            normalizedEmail.startsWith('admissions')) {
       _currentUser = _mockOrgUser;
       _currentOrgProfile = _mockOrgProfile;
       _authStateController.add(_currentUser);
@@ -114,7 +128,9 @@ class MockAuthService implements AuthService {
       // Default to student login
       _currentUser = _mockStudentUser.copyWith(
         email: email,
-        name: normalizedEmail.startsWith('fatima') ? 'Fatima Zahra' : 'Ali Khan',
+        name: normalizedEmail.startsWith('fatima')
+            ? 'Fatima Zahra'
+            : 'Ali Khan',
       );
       _currentStudentProfile = _mockStudentProfile.copyWith(
         fullName: _currentUser!.name,

@@ -1,13 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import '../models/application_model.dart';
 import 'application_repository.dart';
 import 'firestore_serializers.dart';
 
 class FirebaseApplicationRepository implements ApplicationRepository {
-  FirebaseApplicationRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
-      : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+  FirebaseApplicationRepository({
+    FirebaseFirestore? firestore,
+    FirebaseAuth? auth,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _auth = auth ?? FirebaseAuth.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
@@ -63,7 +66,9 @@ class FirebaseApplicationRepository implements ApplicationRepository {
     final application = _fromSnapshot(snapshot);
     if (application.universityId != universityId ||
         _auth.currentUser!.uid != universityId) {
-      throw StateError('You can only update applications for your own opportunities.');
+      throw StateError(
+        'You can only update applications for your own opportunities.',
+      );
     }
     await reference.update({
       'status': status.name,
@@ -97,4 +102,3 @@ class FirebaseApplicationRepository implements ApplicationRepository {
     );
   }
 }
-

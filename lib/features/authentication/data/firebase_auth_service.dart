@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import '../../../models/organization_model.dart';
 import '../../../models/student_profile_model.dart';
 import '../../../models/user_model.dart';
@@ -7,8 +8,8 @@ import 'mock_auth_service.dart';
 
 class FirebaseAuthService implements AuthService {
   FirebaseAuthService({FirebaseAuth? auth, FirebaseFirestore? firestore})
-      : _auth = auth ?? FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance;
+    : _auth = auth ?? FirebaseAuth.instance,
+      _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
@@ -186,9 +187,9 @@ class FirebaseAuthService implements AuthService {
   }
 
   UserRole _roleFromValue(Object? value) => UserRole.values.firstWhere(
-        (role) => role.name == value,
-        orElse: () => UserRole.student,
-      );
+    (role) => role.name == value,
+    orElse: () => UserRole.student,
+  );
 
   DateTime? _dateFromValue(Object? value) {
     if (value is Timestamp) return value.toDate();

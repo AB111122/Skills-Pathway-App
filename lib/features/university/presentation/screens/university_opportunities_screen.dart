@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../models/application_model.dart';
@@ -10,27 +11,68 @@ import '../university_provider.dart';
 
 class UniversityOpportunitiesScreen extends ConsumerStatefulWidget {
   const UniversityOpportunitiesScreen({super.key});
-  @override ConsumerState<UniversityOpportunitiesScreen> createState() => _UniversityOpportunitiesScreenState();
+  @override
+  ConsumerState<UniversityOpportunitiesScreen> createState() =>
+      _UniversityOpportunitiesScreenState();
 }
 
-class _UniversityOpportunitiesScreenState extends ConsumerState<UniversityOpportunitiesScreen> {
+class _UniversityOpportunitiesScreenState
+    extends ConsumerState<UniversityOpportunitiesScreen> {
   late Future<List<OpportunityModel>> _items;
-  @override void initState() { super.initState(); _reload(); }
-  void _reload() { final organizationId = ref.read(authControllerProvider).currentUser?.id ?? ''; _items = ref.read(universityRepositoryProvider).getOwnedOpportunities(organizationId); }
-  Future<void> _refresh() async { setState(_reload); await _items; }
-  @override Widget build(BuildContext context) => Scaffold(
+  @override
+  void initState() {
+    super.initState();
+    _reload();
+  }
+
+  void _reload() {
+    final organizationId =
+        ref.read(authControllerProvider).currentUser?.id ?? '';
+    _items = ref
+        .read(universityRepositoryProvider)
+        .getOwnedOpportunities(organizationId);
+  }
+
+  Future<void> _refresh() async {
+    setState(_reload);
+    await _items;
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Manage Opportunities')),
     body: FutureBuilder<List<OpportunityModel>>(
       future: _items,
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        if (!snapshot.hasData)
+          return const Center(child: CircularProgressIndicator());
         final items = snapshot.data!;
-        return RefreshIndicator(onRefresh: _refresh, child: ListView(padding: const EdgeInsets.all(AppDimensions.p20), children: [
-          CustomButton(text: 'Create Opportunity', icon: Icons.add_business, onPressed: () async { await context.push('/university/opportunities/create'); if (mounted) setState(_reload); }),
-          const SizedBox(height: 20),
-          if (items.isEmpty) const Text('No opportunities yet'),
-          ...items.map((item) => _OpportunityTile(item: item, onChanged: () { if (mounted) setState(_reload); })),
-        ]));
+        return RefreshIndicator(
+          onRefresh: _refresh,
+          child: ListView(
+            padding: const EdgeInsets.all(AppDimensions.p20),
+            children: [
+              CustomButton(
+                text: 'Create Opportunity',
+                icon: Icons.add_business,
+                onPressed: () async {
+                  await context.push('/university/opportunities/create');
+                  if (mounted) setState(_reload);
+                },
+              ),
+              const SizedBox(height: 20),
+              if (items.isEmpty) const Text('No opportunities yet'),
+              ...items.map(
+                (item) => _OpportunityTile(
+                  item: item,
+                  onChanged: () {
+                    if (mounted) setState(_reload);
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
       },
     ),
   );
@@ -45,10 +87,9 @@ class _OpportunityTile extends ConsumerWidget {
     final organizationId =
         ref.read(authControllerProvider).currentUser?.id ?? '';
     return FutureBuilder<List<ApplicationModel>>(
-      future: ref.read(universityRepositoryProvider).getApplicants(
-            organizationId,
-            item.id,
-          ),
+      future: ref
+          .read(universityRepositoryProvider)
+          .getApplicants(organizationId, item.id),
       builder: (context, snapshot) => Card(
         child: ListTile(
           title: Text(item.title),

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+
 import '../../../../models/user_model.dart';
 import '../../domain/auth_state.dart';
 import '../../data/firebase_auth_service.dart';
@@ -9,11 +10,12 @@ final authServiceProvider = Provider<AuthService>((ref) {
   return Firebase.apps.isEmpty ? MockAuthService() : FirebaseAuthService();
 });
 
-final authControllerProvider =
-    StateNotifierProvider<AuthController, AuthState>((ref) {
-  final authService = ref.watch(authServiceProvider);
-  return AuthController(authService);
-});
+final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
+  (ref) {
+    final authService = ref.watch(authServiceProvider);
+    return AuthController(authService);
+  },
+);
 
 class AuthController extends StateNotifier<AuthState> {
   final AuthService _authService;
@@ -29,8 +31,9 @@ class AuthController extends StateNotifier<AuthState> {
     }
     state = state.copyWith(isAuthenticated: true, currentUser: user);
     final studentProfile = await _authService.getStudentProfile(user.id);
-    final organizationProfile =
-        await _authService.getOrganizationProfile(user.id);
+    final organizationProfile = await _authService.getOrganizationProfile(
+      user.id,
+    );
     state = state.copyWith(
       studentProfile: studentProfile,
       organizationProfile: organizationProfile,
@@ -43,10 +46,7 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   /// Sign In with Email & Password
-  Future<bool> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<bool> login({required String email, required String password}) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final user = await _authService.login(email: email, password: password);
@@ -63,28 +63,19 @@ class AuthController extends StateNotifier<AuthState> {
       );
       return true;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: _friendlyError(e),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: _friendlyError(e));
       return false;
     }
   }
 
   /// Quick Demo Sign-in for immediate review testing
   Future<bool> demoLoginAsStudent() async {
-    return login(
-      email: 'fatima.zahra@nust.edu.pk',
-      password: 'Password123',
-    );
+    return login(email: 'fatima.zahra@nust.edu.pk', password: 'Password123');
   }
 
   /// Quick Demo Sign-in as Organization
   Future<bool> demoLoginAsOrg() async {
-    return login(
-      email: 'admissions@nust.edu.pk',
-      password: 'Password123',
-    );
+    return login(email: 'admissions@nust.edu.pk', password: 'Password123');
   }
 
   /// Register as a Student
@@ -125,10 +116,7 @@ class AuthController extends StateNotifier<AuthState> {
       );
       return true;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: _friendlyError(e),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: _friendlyError(e));
       return false;
     }
   }
@@ -165,10 +153,7 @@ class AuthController extends StateNotifier<AuthState> {
       );
       return true;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: _friendlyError(e),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: _friendlyError(e));
       return false;
     }
   }
@@ -181,10 +166,7 @@ class AuthController extends StateNotifier<AuthState> {
       state = state.copyWith(isLoading: false);
       return true;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: _friendlyError(e),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: _friendlyError(e));
       return false;
     }
   }
@@ -195,7 +177,6 @@ class AuthController extends StateNotifier<AuthState> {
     state = const AuthState();
   }
 
-  String _friendlyError(Object error) => error
-      .toString()
-      .replaceFirst(RegExp(r'^(Exception|StateError): '), '');
+  String _friendlyError(Object error) =>
+      error.toString().replaceFirst(RegExp(r'^(Exception|StateError): '), '');
 }
