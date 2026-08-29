@@ -110,9 +110,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   final item = _items[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 28.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
+                    child: Center(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
                         // Icon Hero Container
                         Container(
                           width: 140,
@@ -177,7 +181,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 : AppColors.textSecondaryLight,
                           ),
                         ),
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
                   );
                 },

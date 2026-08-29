@@ -26,9 +26,10 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppDimensions.p24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               const SizedBox(height: AppDimensions.p32),
 
               // Header
@@ -95,7 +96,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                 },
               ),
 
-              const Spacer(),
+              const SizedBox(height: 24),
 
               // Continue Button
               SizedBox(
@@ -144,7 +145,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-            ],
+              ],
+            ),
           ),
         ),
       ),
