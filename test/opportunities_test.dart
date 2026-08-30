@@ -2,12 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:skills_pathway_app/core/widgets/verified_badge.dart';
-import 'package:skills_pathway_app/features/opportunities/domain/opportunity_state.dart';
-import 'package:skills_pathway_app/features/opportunities/presentation/controllers/opportunity_controller.dart';
 import 'package:skills_pathway_app/features/opportunities/presentation/screens/opportunities_screen.dart';
 import 'package:skills_pathway_app/features/opportunities/presentation/screens/opportunity_detail_screen.dart';
 import 'package:skills_pathway_app/models/opportunity_filter_model.dart';
-import 'package:skills_pathway_app/models/opportunity_model.dart';
 import 'package:skills_pathway_app/services/mock_opportunity_service.dart';
 
 void main() {

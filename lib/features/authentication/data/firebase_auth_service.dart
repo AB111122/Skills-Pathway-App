@@ -44,7 +44,7 @@ class FirebaseAuthService implements AuthService {
       );
       final firebaseUser = credential.user;
       if (firebaseUser == null) throw Exception('Unable to sign in.');
-      return _loadUser(firebaseUser);
+      return await _loadUser(firebaseUser);
     } on FirebaseAuthException catch (error) {
       throw Exception(_friendlyAuthMessage(error.code));
     }
@@ -93,7 +93,7 @@ class FirebaseAuthService implements AuthService {
           'completionPercentage': 0.75,
         },
       });
-      return _loadUser(firebaseUser);
+      return await _loadUser(firebaseUser);
     } on FirebaseAuthException catch (error) {
       throw Exception(_friendlyAuthMessage(error.code));
     }
@@ -137,7 +137,7 @@ class FirebaseAuthService implements AuthService {
           'isVerified': false,
         },
       });
-      return _loadUser(firebaseUser);
+      return await _loadUser(firebaseUser);
     } on FirebaseAuthException catch (error) {
       throw Exception(_friendlyAuthMessage(error.code));
     }

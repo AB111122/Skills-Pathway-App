@@ -1,4 +1,13 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_core/firebase_core.dart';
 import '../models/application_model.dart';
+import 'firebase_application_repository.dart';
+
+final applicationRepositoryProvider = Provider<ApplicationRepository>(
+  (ref) => Firebase.apps.isEmpty
+      ? MockApplicationRepository.instance
+      : FirebaseApplicationRepository(),
+);
 
 abstract class ApplicationRepository {
   Future<ApplicationModel> create(ApplicationModel application);

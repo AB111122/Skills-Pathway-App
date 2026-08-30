@@ -6,7 +6,6 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../services/community_repository.dart';
 import '../../../../services/firebase_community_repository.dart';
-import '../../../../services/community_repository.dart';
 
 final communityRepositoryProvider = Provider<CommunityRepository>(
   (ref) => Firebase.apps.isEmpty

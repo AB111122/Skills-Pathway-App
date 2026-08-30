@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../models/application_model.dart';
-import '../../../../services/firebase_application_repository.dart';
+import '../../../../services/application_repository.dart';
 import '../../../authentication/presentation/controllers/auth_controller.dart';
 
 class StudentApplicationsScreen extends ConsumerWidget {
@@ -15,7 +15,7 @@ class StudentApplicationsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('My Applications')),
       body: FutureBuilder<List<ApplicationModel>>(
-        future: FirebaseApplicationRepository().forStudent(studentId),
+        future: ref.watch(applicationRepositoryProvider).forStudent(studentId),
         builder: (context, snapshot) {
           if (!snapshot.hasData)
             return const Center(child: CircularProgressIndicator());

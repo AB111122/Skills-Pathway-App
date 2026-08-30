@@ -6,16 +6,16 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function userRole(uid) {
-      return get(/databases/$(database)/documents/users/$(uid)).data.role;
-    }
-
     function isStudent() {
-      return signedIn() && userRole(request.auth.uid) == 'student';
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'student';
     }
 
     function isUniversity() {
-      return signedIn() && userRole(request.auth.uid) == 'organization';
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'organization';
     }
 
     match /users/{uid} {
@@ -37,17 +37,15 @@ service cloud.firestore {
     }
 
     match /opportunities/{opportunityId} {
-      allow read: if signedIn()
-        && ((resource.data.status != 'closed'
-          && resource.data.deadline > request.time)
-          || resource.data.organizationId == request.auth.uid));
+      allow read: if signedIn();
       allow create: if isUniversity()
         && request.resource.data.organizationId == request.auth.uid
         && request.resource.data.createdBy == request.auth.uid;
-      allow update: if isUniversity()
+      allow update: if (isUniversity()
         && resource.data.organizationId == request.auth.uid
         && request.resource.data.organizationId == resource.data.organizationId
-        && request.resource.data.createdBy == resource.data.createdBy;
+        && request.resource.data.createdBy == resource.data.createdBy)
+        || (signedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['applicationCount']));
       allow delete: if isUniversity()
         && resource.data.organizationId == request.auth.uid;
     }
@@ -55,17 +53,15 @@ service cloud.firestore {
     match /applications/{applicationId} {
       allow create: if isStudent()
         && request.resource.data.studentId == request.auth.uid
-        && request.resource.data.status == 'pending'
-        && get(/databases/$(database)/documents/opportunities/$(request.resource.data.opportunityId)).data.status != 'closed'
-        && request.resource.data.organizationId == get(/databases/$(database)/documents/opportunities/$(request.resource.data.opportunityId)).data.organizationId;
+        && request.resource.data.status == 'pending';
       allow read: if signedIn()
         && (resource.data.studentId == request.auth.uid
-          || get(/databases/$(database)/documents/opportunities/$(resource.data.opportunityId)).data.organizationId == request.auth.uid);
+          || resource.data.organizationId == request.auth.uid
+          || resource.data.universityId == request.auth.uid);
       allow update: if isUniversity()
-        && get(/databases/$(database)/documents/opportunities/$(resource.data.opportunityId)).data.organizationId == request.auth.uid
+        && (resource.data.organizationId == request.auth.uid || resource.data.universityId == request.auth.uid)
         && request.resource.data.studentId == resource.data.studentId
-        && request.resource.data.opportunityId == resource.data.opportunityId
-        && request.resource.data.organizationId == resource.data.organizationId;
+        && request.resource.data.opportunityId == resource.data.opportunityId;
       allow delete: if false;
     }
 
@@ -77,12 +73,13 @@ service cloud.firestore {
           || (request.resource.data.authorType == 'university'
             && isUniversity()
             && request.resource.data.universityId == request.auth.uid));
-      allow update: if signedIn()
+      allow update: if (signedIn()
         && resource.data.authorId == request.auth.uid
         && request.resource.data.authorId == resource.data.authorId
         && request.resource.data.authorType == resource.data.authorType
         && (resource.data.authorType != 'university'
-          || resource.data.universityId == request.auth.uid);
+          || resource.data.universityId == request.auth.uid))
+        || (signedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likesCount', 'commentsCount', 'reportCount']));
       allow delete: if signedIn()
         && resource.data.authorId == request.auth.uid
         && (resource.data.authorType != 'university'
