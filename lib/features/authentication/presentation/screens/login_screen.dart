@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_strings.dart';
@@ -14,10 +15,7 @@ import '../controllers/auth_controller.dart';
 class LoginScreen extends ConsumerStatefulWidget {
   final UserRole initialRole;
 
-  const LoginScreen({
-    super.key,
-    this.initialRole = UserRole.student,
-  });
+  const LoginScreen({super.key, this.initialRole = UserRole.student});
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -63,16 +61,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final success = await ref.read(authControllerProvider.notifier).login(
+    final success = await ref
+        .read(authControllerProvider.notifier)
+        .login(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
 
     if (success && mounted) {
       final role = ref.read(authControllerProvider).currentUser?.role;
-      context.go(role == UserRole.organization
-          ? RouteNames.universityDashboard
-          : RouteNames.home);
+      context.go(
+        role == UserRole.organization
+            ? RouteNames.universityDashboard
+            : RouteNames.home,
+      );
     }
   }
 
@@ -82,8 +84,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor: isDark
+          ? AppColors.backgroundDark
+          : AppColors.backgroundLight,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -109,7 +112,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -156,7 +159,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   decoration: BoxDecoration(
                     color: isDark
                         ? AppColors.surfaceDark
-                        : AppColors.cardBorderLight.withOpacity(0.5),
+                        : AppColors.cardBorderLight.withValues(alpha: 0.5),
                     borderRadius: AppDimensions.roundedMedium,
                   ),
                   child: Row(
@@ -187,10 +190,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Container(
                     padding: const EdgeInsets.all(AppDimensions.p12),
                     decoration: BoxDecoration(
-                      color: AppColors.error.withOpacity(0.1),
+                      color: AppColors.error.withValues(alpha: 0.1),
                       borderRadius: AppDimensions.roundedMedium,
                       border: Border.all(
-                        color: AppColors.error.withOpacity(0.3),
+                        color: AppColors.error.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
@@ -318,10 +321,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Container(
                   padding: const EdgeInsets.all(AppDimensions.p12),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryMint.withOpacity(0.08),
+                    color: AppColors.primaryMint.withValues(alpha: 0.08),
                     borderRadius: AppDimensions.roundedMedium,
                     border: Border.all(
-                      color: AppColors.primaryMint.withOpacity(0.25),
+                      color: AppColors.primaryMint.withValues(alpha: 0.25),
                     ),
                   ),
                   child: Row(
@@ -408,7 +411,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
+                    color: Colors.black.withValues(alpha: 0.06),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),

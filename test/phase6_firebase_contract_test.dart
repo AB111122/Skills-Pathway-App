@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:skills_pathway_app/features/authentication/data/mock_auth_service.dart';
+import 'package:skills_pathway_app/features/authentication/domain/auth_state.dart';
 import 'package:skills_pathway_app/models/application_model.dart';
 import 'package:skills_pathway_app/models/opportunity_model.dart';
 import 'package:skills_pathway_app/models/post_model.dart';
@@ -38,7 +39,10 @@ void main() {
       );
 
       final data = FirestoreSerializers.opportunityToMap(opportunity);
-      final restored = FirestoreSerializers.opportunityFromMap(data, id: 'opp-1');
+      final restored = FirestoreSerializers.opportunityFromMap(
+        data,
+        id: 'opp-1',
+      );
 
       expect(data['deadline'], isA<Timestamp>());
       expect(data['createdAt'], isA<Timestamp>());
@@ -71,7 +75,10 @@ void main() {
       expect(restored.studentId, application.studentId);
       expect(restored.universityId, application.universityId);
       expect(restored.status, ApplicationStatus.shortlisted);
-      expect(restored.applicationDate.toUtc(), application.applicationDate.toUtc());
+      expect(
+        restored.applicationDate.toUtc(),
+        application.applicationDate.toUtc(),
+      );
     });
 
     test('preserves official post ownership and engagement data', () {
@@ -118,61 +125,76 @@ void main() {
 
       expect(student.role, UserRole.student);
       expect(organization.role, UserRole.organization);
-      expect((await service.getStudentProfile(student.id))?.userId,
-          'usr_student_01');
-      expect((await service.getOrganizationProfile(organization.id))?.userId,
-          'usr_org_01');
-    });
-
-    test('registration emits a session with the requested role and profile', () async {
-      final service = MockAuthService();
-      final events = <UserModel?>[];
-      final subscription = service.authStateChanges.listen(events.add);
-
-      final student = await service.registerStudent(
-        fullName: 'New Student',
-        email: 'new.student@example.com',
-        password: 'Password123',
-        city: 'Lahore',
-        educationLevel: 'Undergraduate',
-        degree: 'BS Computer Science',
-        fieldOfStudy: 'Computer Science',
-        university: 'University A',
-        skills: ['Dart'],
-        careerInterests: ['Software Engineering'],
+      expect(
+        (await service.getStudentProfile(student.id))?.userId,
+        'usr_student_01',
       );
-
-      await Future<void>.delayed(Duration.zero);
-      expect(student.role, UserRole.student);
-      expect(events.last?.id, student.id);
-      expect((await service.getStudentProfile(student.id))?.fullName,
-          'New Student');
-      await subscription.cancel();
-    });
-
-    test('organization registration preserves organization role and profile', () async {
-      final service = MockAuthService();
-      final organization = await service.registerOrganization(
-        orgName: 'University A',
-        orgType: 'University / Higher Education',
-        officialEmail: 'admin@university-a.example',
-        password: 'Password123',
-        website: 'https://university-a.example',
-        city: 'Lahore',
-        registrationNumber: 'REG-1',
+      expect(
+        (await service.getOrganizationProfile(organization.id))?.userId,
+        'usr_org_01',
       );
-
-      expect(organization.role, UserRole.organization);
-      final profile = await service.getOrganizationProfile(organization.id);
-      expect(profile?.orgName, 'University A');
-      expect(profile?.isVerified, isFalse);
     });
+
+    test(
+      'registration emits a session with the requested role and profile',
+      () async {
+        final service = MockAuthService();
+        final events = <UserModel?>[];
+        final subscription = service.authStateChanges.listen(events.add);
+
+        final student = await service.registerStudent(
+          fullName: 'New Student',
+          email: 'new.student@example.com',
+          password: 'Password123',
+          city: 'Lahore',
+          educationLevel: 'Undergraduate',
+          degree: 'BS Computer Science',
+          fieldOfStudy: 'Computer Science',
+          university: 'University A',
+          skills: ['Dart'],
+          careerInterests: ['Software Engineering'],
+        );
+
+        await Future<void>.delayed(Duration.zero);
+        expect(student.role, UserRole.student);
+        expect(events.last?.id, student.id);
+        expect(
+          (await service.getStudentProfile(student.id))?.fullName,
+          'New Student',
+        );
+        await subscription.cancel();
+      },
+    );
+
+    test(
+      'organization registration preserves organization role and profile',
+      () async {
+        final service = MockAuthService();
+        final organization = await service.registerOrganization(
+          orgName: 'University A',
+          orgType: 'University / Higher Education',
+          officialEmail: 'admin@university-a.example',
+          password: 'Password123',
+          website: 'https://university-a.example',
+          city: 'Lahore',
+          registrationNumber: 'REG-1',
+        );
+
+        expect(organization.role, UserRole.organization);
+        final profile = await service.getOrganizationProfile(organization.id);
+        expect(profile?.orgName, 'University A');
+        expect(profile?.isVerified, isFalse);
+      },
+    );
 
     test('logout clears the mock session and emits null', () async {
       final service = MockAuthService();
       final events = <UserModel?>[];
       final subscription = service.authStateChanges.listen(events.add);
-      await service.login(email: 'student@example.com', password: 'Password123');
+      await service.login(
+        email: 'student@example.com',
+        password: 'Password123',
+      );
       await service.logout();
       await Future<void>.delayed(Duration.zero);
 
@@ -223,82 +245,150 @@ void main() {
       expect(visible.any((item) => item.id == expired.id), isFalse);
     });
 
-    test('duplicate applications are prevented and status remains synchronized', () async {
-      final service = MockOpportunityService();
-      final opportunity = await service.createUniversityOpportunity(
-        organizationId: 'uni-status',
-        organizationName: 'University',
-        title: 'Status Test',
-        description: 'Application test',
-        type: OpportunityType.internship,
-        deadline: DateTime.now().add(const Duration(days: 5)),
-        location: 'Remote',
-        applicationUrl: 'https://example.com',
+    test(
+      'duplicate applications are prevented and status remains synchronized',
+      () async {
+        final service = MockOpportunityService();
+        final opportunity = await service.createUniversityOpportunity(
+          organizationId: 'uni-status',
+          organizationName: 'University',
+          title: 'Status Test',
+          description: 'Application test',
+          type: OpportunityType.internship,
+          deadline: DateTime.now().add(const Duration(days: 5)),
+          location: 'Remote',
+          applicationUrl: 'https://example.com',
+        );
+
+        expect(await service.markAsApplied(opportunity.id), isTrue);
+        expect(await service.markAsApplied(opportunity.id), isFalse);
+        final applications = await MockApplicationRepository.instance
+            .forOpportunity(opportunity.id);
+        expect(applications, hasLength(1));
+        await MockApplicationRepository.instance.updateStatus(
+          'uni-status',
+          applications.single.id,
+          ApplicationStatus.shortlisted,
+        );
+        expect(
+          (await MockApplicationRepository.instance.forStudent(
+            applications.single.studentId,
+          )).single.status,
+          ApplicationStatus.shortlisted,
+        );
+      },
+    );
+
+    test(
+      'university official post ownership rejects another university',
+      () async {
+        final repository = MockCommunityRepository.instance;
+        final post = await repository.createUniversityPost(
+          universityId: 'uni-owner',
+          universityName: 'University A',
+          title: 'Official',
+          content: 'Content',
+          topic: 'Announcements',
+        );
+
+        expect(
+          () => repository.updateUniversityPost('uni-other', post),
+          throwsStateError,
+        );
+        expect(
+          () => repository.deleteUniversityPost('uni-other', post.id),
+          throwsStateError,
+        );
+        await repository.deleteUniversityPost('uni-owner', post.id);
+      },
+    );
+
+    test(
+      'community comments, likes, and follows update persisted post state',
+      () async {
+        final repository = MockCommunityRepository.instance;
+        final post = await repository.createPost(
+          title: 'Community contract',
+          content: 'Test content',
+          topic: 'Technology',
+        );
+
+        final comment = await repository.addComment(post.id, 'Useful post');
+        expect(comment.postId, post.id);
+        expect(
+          (await repository.getComments(post.id))
+              .any((item) => item.id == comment.id),
+          isTrue,
+        );
+
+        final liked = await repository.toggleLike(post.id);
+        expect(liked.isLiked, isTrue);
+        expect(liked.likesCount, post.likesCount + 1);
+        final unliked = await repository.toggleLike(post.id);
+        expect(unliked.isLiked, isFalse);
+        expect(unliked.likesCount, post.likesCount);
+
+        final followed = await repository.toggleFollowAuthor(post.id);
+        expect(followed.isFollowingAuthor, isTrue);
+        final unfollowed = await repository.toggleFollowAuthor(post.id);
+        expect(unfollowed.isFollowingAuthor, isFalse);
+      },
+    );
+
+    test(
+      'student can delete their own post and cannot delete another user post',
+      () async {
+        final repository = MockCommunityRepository.instance;
+        final myPost = await repository.createPost(
+          title: 'My post',
+          content: 'Delete me',
+          topic: 'Technology',
+        );
+
+        await repository.deletePost('local-user', myPost.id);
+        expect(
+          (await repository.getPosts()).any((post) => post.id == myPost.id),
+          isFalse,
+        );
+
+        final otherUserPost = await repository.createPost(
+          title: 'Other user post',
+          content: 'Other content',
+          topic: 'Technology',
+        );
+
+        expect(
+          () => repository.deletePost('someone-else', otherUserPost.id),
+          throwsStateError,
+        );
+      },
+    );
+
+    test('auth restoration waits for role resolution rather than defaulting to student', () async {
+      final service = MockAuthService();
+      final state = AuthState.initial();
+      final restored = state.copyWith(
+        isAuthenticated: true,
+        currentUser: UserModel(
+          id: 'org-uid',
+          name: 'University A',
+          email: 'admin@university-a.example',
+          role: UserRole.organization,
+          createdAt: DateTime.now(),
+        ),
+        isLoading: false,
       );
 
-      expect(await service.markAsApplied(opportunity.id), isTrue);
-      expect(await service.markAsApplied(opportunity.id), isFalse);
-      final applications = await MockApplicationRepository.instance
-          .forOpportunity(opportunity.id);
-      expect(applications, hasLength(1));
-      await MockApplicationRepository.instance.updateStatus(
-        'uni-status',
-        applications.single.id,
-        ApplicationStatus.shortlisted,
-      );
+      expect(restored.isOrganization, isTrue);
+      expect(restored.isStudent, isFalse);
+      expect(AuthState.loading().isLoading, isTrue);
       expect(
-        (await MockApplicationRepository.instance
-                .forStudent(applications.single.studentId))
-            .single
-            .status,
-        ApplicationStatus.shortlisted,
+        (await service.login(
+          email: 'admissions@nust.edu.pk',
+          password: 'Password123',
+        )).role,
+        UserRole.organization,
       );
-    });
-
-    test('university official post ownership rejects another university', () async {
-      final repository = MockCommunityRepository.instance;
-      final post = await repository.createUniversityPost(
-        universityId: 'uni-owner',
-        universityName: 'University A',
-        title: 'Official',
-        content: 'Content',
-        topic: 'Announcements',
-      );
-
-      expect(
-        () => repository.updateUniversityPost('uni-other', post),
-        throwsStateError,
-      );
-      expect(
-        () => repository.deleteUniversityPost('uni-other', post.id),
-        throwsStateError,
-      );
-      await repository.deleteUniversityPost('uni-owner', post.id);
-    });
-
-    test('community comments, likes, and follows update persisted post state', () async {
-      final repository = MockCommunityRepository.instance;
-      final post = await repository.createPost(
-        title: 'Community contract',
-        content: 'Test content',
-        topic: 'Technology',
-      );
-
-      final comment = await repository.addComment(post.id, 'Useful post');
-      expect(comment.postId, post.id);
-      expect((await repository.getComments(post.id)).any((item) => item.id == comment.id), isTrue);
-
-      final liked = await repository.toggleLike(post.id);
-      expect(liked.isLiked, isTrue);
-      expect(liked.likesCount, post.likesCount + 1);
-      final unliked = await repository.toggleLike(post.id);
-      expect(unliked.isLiked, isFalse);
-      expect(unliked.likesCount, post.likesCount);
-
-      final followed = await repository.toggleFollowAuthor(post.id);
-      expect(followed.isFollowingAuthor, isTrue);
-      final unfollowed = await repository.toggleFollowAuthor(post.id);
-      expect(unfollowed.isFollowingAuthor, isFalse);
     });
   });
 }

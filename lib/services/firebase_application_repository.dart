@@ -42,6 +42,24 @@ class FirebaseApplicationRepository implements ApplicationRepository {
   }
 
   @override
+  Future<List<ApplicationModel>> forOrganizationOpportunity(
+    String organizationId,
+    String opportunityId,
+  ) async {
+    _requireSignedIn();
+    if (_auth.currentUser!.uid != organizationId) {
+      throw StateError('You can only view your own applicants.');
+    }
+    final snapshot = await _applications
+        .where('organizationId', isEqualTo: organizationId)
+        .get();
+    return snapshot.docs
+        .map(_fromSnapshot)
+        .where((application) => application.opportunityId == opportunityId)
+        .toList();
+  }
+
+  @override
   Future<List<ApplicationModel>> forStudent(String studentId) async {
     _requireSignedIn();
     if (_auth.currentUser!.uid != studentId) {

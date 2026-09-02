@@ -20,23 +20,35 @@ final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
 class AuthController extends StateNotifier<AuthState> {
   final AuthService _authService;
 
-  AuthController(this._authService) : super(const AuthState()) {
+  AuthController(this._authService) : super(AuthState.loading()) {
     _authService.authStateChanges.listen(_restoreSession);
   }
 
   Future<void> _restoreSession(UserModel? user) async {
     if (user == null) {
-      if (state.isAuthenticated) state = const AuthState();
+      state = const AuthState();
       return;
     }
-    state = state.copyWith(isAuthenticated: true, currentUser: user);
+
+    state = state.copyWith(
+      isLoading: true,
+      isAuthenticated: true,
+      currentUser: user,
+      errorMessage: null,
+    );
+
     final studentProfile = await _authService.getStudentProfile(user.id);
     final organizationProfile = await _authService.getOrganizationProfile(
       user.id,
     );
+
     state = state.copyWith(
+      isLoading: false,
+      isAuthenticated: true,
+      currentUser: user,
       studentProfile: studentProfile,
       organizationProfile: organizationProfile,
+      errorMessage: null,
     );
   }
 

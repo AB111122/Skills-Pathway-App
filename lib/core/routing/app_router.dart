@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../features/authentication/presentation/screens/forgot_password_screen.dart';
 import '../../features/authentication/presentation/screens/login_screen.dart';
 import '../../features/authentication/presentation/screens/onboarding_screen.dart';
@@ -24,6 +25,7 @@ import '../../models/user_model.dart';
 import '../../models/post_model.dart';
 import '../../models/opportunity_model.dart';
 import '../../features/authentication/presentation/controllers/auth_controller.dart';
+import '../../features/authentication/domain/auth_state.dart';
 import '../../features/university/presentation/university_scaffold.dart';
 import '../../features/university/presentation/screens/university_dashboard_screen.dart';
 import '../../features/university/presentation/screens/university_opportunities_screen.dart';
@@ -36,32 +38,65 @@ import '../../features/university/presentation/screens/edit_university_post_scre
 import 'route_names.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
-final _shellNavigatorHomeKey =
-    GlobalKey<NavigatorState>(debugLabel: 'shellHome');
-final _shellNavigatorOppKey =
-    GlobalKey<NavigatorState>(debugLabel: 'shellOpportunities');
-final _shellNavigatorNetKey =
-    GlobalKey<NavigatorState>(debugLabel: 'shellNetwork');
-final _shellNavigatorChatKey =
-    GlobalKey<NavigatorState>(debugLabel: 'shellChat');
-final _shellNavigatorProfKey =
-    GlobalKey<NavigatorState>(debugLabel: 'shellProfile');
+final _shellNavigatorHomeKey = GlobalKey<NavigatorState>(
+  debugLabel: 'shellHome',
+);
+final _shellNavigatorOppKey = GlobalKey<NavigatorState>(
+  debugLabel: 'shellOpportunities',
+);
+final _shellNavigatorNetKey = GlobalKey<NavigatorState>(
+  debugLabel: 'shellNetwork',
+);
+final _shellNavigatorChatKey = GlobalKey<NavigatorState>(
+  debugLabel: 'shellChat',
+);
+final _shellNavigatorProfKey = GlobalKey<NavigatorState>(
+  debugLabel: 'shellProfile',
+);
+
+class _RouterRefreshNotifier extends ChangeNotifier {
+  void refresh() => notifyListeners();
+}
 
 final routerProvider = Provider<GoRouter>((ref) {
+  final refreshNotifier = _RouterRefreshNotifier();
+  ref.onDispose(refreshNotifier.dispose);
+  ref.listen<AuthState>(authControllerProvider, (_, _) {
+    refreshNotifier.refresh();
+  });
   return GoRouter(
     navigatorKey: rootNavigatorKey,
+    refreshListenable: refreshNotifier,
     initialLocation: RouteNames.splash,
     debugLogDiagnostics: false,
     redirect: (_, state) {
       final auth = ref.read(authControllerProvider);
       final path = state.uri.path;
+      final isLoading = auth.isLoading;
+      final publicPaths = {
+        RouteNames.splash,
+        RouteNames.onboarding,
+        RouteNames.roleSelection,
+        RouteNames.login,
+        RouteNames.registerStudent,
+        RouteNames.registerOrganization,
+        RouteNames.forgotPassword,
+      };
+
+      if (isLoading) return null;
+      if (!auth.isAuthenticated && !publicPaths.contains(path)) {
+        return RouteNames.login;
+      }
+
       final isUniversityRoute = path.startsWith('/university/');
-      final isStudentRoute = path == RouteNames.home ||
+      final isStudentRoute =
+          path == RouteNames.home ||
           path == RouteNames.opportunities ||
           path == RouteNames.network ||
           path == RouteNames.chatbot ||
           path == RouteNames.profile ||
           path == RouteNames.applications;
+
       if (auth.isOrganization && isStudentRoute) {
         return RouteNames.universityDashboard;
       }
@@ -136,7 +171,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
         path: RouteNames.applications,
-        builder: (_, __) => const StudentApplicationsScreen(),
+        builder: (_, _) => const StudentApplicationsScreen(),
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
@@ -146,16 +181,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
         path: '/network/post/:id',
-        builder: (context, state) => PostDetailsScreen(
-          post: state.extra as PostModel,
-        ),
+        builder: (context, state) =>
+            PostDetailsScreen(post: state.extra as PostModel),
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
         path: '/chatbot/conversation',
-        builder: (context, state) => AiChatScreen(
-          starter: state.extra as String?,
-        ),
+        builder: (context, state) =>
+            AiChatScreen(starter: state.extra as String?),
       ),
 
       ShellRoute(
@@ -163,21 +196,21 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: RouteNames.universityDashboard,
-            redirect: (_, __) => ref.read(authControllerProvider).isOrganization
+            redirect: (_, _) => ref.read(authControllerProvider).isOrganization
                 ? null
                 : RouteNames.home,
-            builder: (_, __) => const UniversityDashboardScreen(),
+            builder: (_, _) => const UniversityDashboardScreen(),
           ),
           GoRoute(
             path: RouteNames.universityOpportunities,
-            redirect: (_, __) => ref.read(authControllerProvider).isOrganization
+            redirect: (_, _) => ref.read(authControllerProvider).isOrganization
                 ? null
                 : RouteNames.home,
-            builder: (_, __) => const UniversityOpportunitiesScreen(),
+            builder: (_, _) => const UniversityOpportunitiesScreen(),
           ),
           GoRoute(
             path: RouteNames.universityCreateOpportunity,
-            redirect: (_, __) => ref.read(authControllerProvider).isOrganization
+            redirect: (_, _) => ref.read(authControllerProvider).isOrganization
                 ? null
                 : RouteNames.home,
             builder: (_, state) => CreateOpportunityScreen(
@@ -186,41 +219,48 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/university/opportunities/:id/edit',
-            redirect: (_, __) => ref.read(authControllerProvider).isOrganization ? null : RouteNames.home,
+            redirect: (_, _) => ref.read(authControllerProvider).isOrganization
+                ? null
+                : RouteNames.home,
             builder: (_, state) => CreateOpportunityScreen(
               opportunity: state.extra as OpportunityModel?,
             ),
           ),
           GoRoute(
             path: RouteNames.universityCreatePost,
-            redirect: (_, __) => ref.read(authControllerProvider).isOrganization
+            redirect: (_, _) => ref.read(authControllerProvider).isOrganization
                 ? null
                 : RouteNames.home,
-            builder: (_, __) => const UniversityCreatePostScreen(),
+            builder: (_, _) => const UniversityCreatePostScreen(),
           ),
           GoRoute(
             path: RouteNames.universityPosts,
-            redirect: (_, __) => ref.read(authControllerProvider).isOrganization ? null : RouteNames.home,
-            builder: (_, __) => const UniversityPostsScreen(),
+            redirect: (_, _) => ref.read(authControllerProvider).isOrganization
+                ? null
+                : RouteNames.home,
+            builder: (_, _) => const UniversityPostsScreen(),
           ),
           GoRoute(
             path: '/university/posts/:id/edit',
-            redirect: (_, __) => ref.read(authControllerProvider).isOrganization ? null : RouteNames.home,
-            builder: (_, state) => EditUniversityPostScreen(post: state.extra as PostModel),
+            redirect: (_, _) => ref.read(authControllerProvider).isOrganization
+                ? null
+                : RouteNames.home,
+            builder: (_, state) =>
+                EditUniversityPostScreen(post: state.extra as PostModel),
           ),
           GoRoute(
             path: RouteNames.universityProfile,
-            redirect: (_, __) => ref.read(authControllerProvider).isOrganization
+            redirect: (_, _) => ref.read(authControllerProvider).isOrganization
                 ? null
                 : RouteNames.home,
-            builder: (_, __) => const UniversityProfileScreen(),
+            builder: (_, _) => const UniversityProfileScreen(),
           ),
           GoRoute(
             path: RouteNames.universityApplications,
-            redirect: (_, __) => ref.read(authControllerProvider).isOrganization
+            redirect: (_, _) => ref.read(authControllerProvider).isOrganization
                 ? null
                 : RouteNames.home,
-            builder: (_, __) => const UniversityApplicationsScreen(),
+            builder: (_, _) => const UniversityApplicationsScreen(),
           ),
         ],
       ),

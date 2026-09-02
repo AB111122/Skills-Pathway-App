@@ -31,7 +31,7 @@ class StatBadge extends StatelessWidget {
         color: bgColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: fgColor.withOpacity(0.2),
+          color: fgColor.withValues(alpha: 0.2),
           width: 0.8,
         ),
       ),
@@ -65,7 +65,7 @@ class StatBadge extends StatelessWidget {
 
   (Color, Color) _getColors(BuildContext context) {
     if (customColor != null) {
-      return (customColor!.withOpacity(0.12), customColor!);
+      return (customColor!.withValues(alpha: 0.12), customColor!);
     }
 
     switch (style) {

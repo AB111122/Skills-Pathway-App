@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/application_model.dart';
 import '../models/opportunity_model.dart';
@@ -76,7 +77,10 @@ class FirebaseUniversityPortalRepository implements UniversityPortalRepository {
         'You can only view applicants for your own opportunities.',
       );
     }
-    return _applications.forOpportunity(opportunityId);
+    return _applications.forOrganizationOpportunity(
+      organizationId,
+      opportunityId,
+    );
   }
 
   @override
@@ -88,12 +92,29 @@ class FirebaseUniversityPortalRepository implements UniversityPortalRepository {
 
   @override
   Future<UniversityStats> getStats(String organizationId) async {
-    final owned = await getOwnedOpportunities(organizationId);
+    final owned = await _readStatsPart(
+      'opportunities',
+      () => getOwnedOpportunities(organizationId),
+      const <OpportunityModel>[],
+    );
     final applications = <ApplicationModel>[];
     for (final opportunity in owned) {
-      applications.addAll(await _applications.forOpportunity(opportunity.id));
+      applications.addAll(
+        await _readStatsPart(
+          'applications/${opportunity.id}',
+          () => _applications.forOrganizationOpportunity(
+            organizationId,
+            opportunity.id,
+          ),
+          const <ApplicationModel>[],
+        ),
+      );
     }
-    final posts = await _community.getPostsByAuthor(organizationId);
+    final posts = await _readStatsPart(
+      'posts',
+      () => _community.getPostsByAuthor(organizationId),
+      const <PostModel>[],
+    );
     return UniversityStats(
       activeOpportunities: owned
           .where(
@@ -109,9 +130,27 @@ class FirebaseUniversityPortalRepository implements UniversityPortalRepository {
       publishedPosts: posts.length,
       engagement: posts.fold(
         0,
-        (sum, post) => sum + post.likesCount + post.commentsCount,
+        (total, post) => total + post.likesCount + post.commentsCount,
       ),
     );
+  }
+
+  Future<T> _readStatsPart<T>(
+    String operation,
+    Future<T> Function() read,
+    T fallback,
+  ) async {
+    try {
+      final value = await read();
+      debugPrint('[FirebaseUniversityPortal] $operation read succeeded');
+      return value;
+    } on FirebaseException catch (error, stackTrace) {
+      debugPrint(
+        '[FirebaseUniversityPortal] $operation failed code=${error.code} message=${error.message}',
+      );
+      debugPrintStack(stackTrace: stackTrace);
+      return fallback;
+    }
   }
 
   @override

@@ -108,10 +108,10 @@ class _RegisterOrganizationScreenState
                 Container(
                   padding: const EdgeInsets.all(AppDimensions.p16),
                   decoration: BoxDecoration(
-                    color: AppColors.secondary.withOpacity(0.08),
+                    color: AppColors.secondary.withValues(alpha: 0.08),
                     borderRadius: AppDimensions.roundedLarge,
                     border: Border.all(
-                      color: AppColors.secondary.withOpacity(0.25),
+                      color: AppColors.secondary.withValues(alpha: 0.25),
                     ),
                   ),
                   child: Row(

@@ -44,8 +44,9 @@ class _UniversityOpportunitiesScreenState
     body: FutureBuilder<List<OpportunityModel>>(
       future: _items,
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
+        if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
+        }
         final items = snapshot.data!;
         return RefreshIndicator(
           onRefresh: _refresh,
@@ -130,13 +131,15 @@ class _OpportunityTile extends ConsumerWidget {
                     .read(universityRepositoryProvider)
                     .deleteOpportunity(organizationId, item.id);
                 onChanged();
+                return;
               }
               if (action == 'edit') {
+                if (!context.mounted) return;
                 await context.push(
                   '/university/opportunities/${item.id}/edit',
                   extra: item,
                 );
-                onChanged();
+                if (context.mounted) onChanged();
               }
             },
             itemBuilder: (_) => [

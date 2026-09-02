@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/theme/text_styles.dart';
 import '../../../../models/post_model.dart';
+import '../../../authentication/presentation/controllers/auth_controller.dart';
 import 'create_post_screen.dart';
 
 class CommunityScreen extends ConsumerStatefulWidget {
@@ -20,6 +21,9 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
   String? _topic;
   int _tab = 0;
   final _topics = const [
+    'General',
+    'Admissions',
+    'Careers',
     'All topics',
     'Scholarships',
     'Internships',
@@ -110,17 +114,21 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
           child: FutureBuilder<List<PostModel>>(
             future: _posts,
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting)
+              if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
-              if (snapshot.hasError)
+              }
+              if (snapshot.hasError) {
                 return const Center(child: Text('Could not load posts.'));
+              }
               var posts = snapshot.data ?? [];
-              if (_tab == 1)
+              if (_tab == 1) {
                 posts = [...posts]
                   ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-              if (_tab == 2)
+              }
+              if (_tab == 2) {
                 posts = posts.where((post) => post.isFollowingAuthor).toList();
-              if (posts.isEmpty)
+              }
+              if (posts.isEmpty) {
                 return Center(
                   child: Text(
                     _tab == 2
@@ -128,6 +136,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
                         : 'No posts yet',
                   ),
                 );
+              }
               return RefreshIndicator(
                 onRefresh: () async {
                   _refresh();
@@ -152,102 +161,168 @@ class _PostCard extends ConsumerWidget {
   final PostModel post;
   final VoidCallback onChanged;
   const _PostCard({required this.post, required this.onChanged});
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) => Card(
-    child: InkWell(
-      onTap: () async {
-        await context.push('/network/post/${post.id}', extra: post);
-        onChanged();
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(AppDimensions.p16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(child: Text(post.authorName.substring(0, 1))),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        post.authorName,
-                        style: AppTextStyles.labelLarge(context),
-                      ),
-                      Text(
-                        post.authorRole,
-                        style: AppTextStyles.bodySmall(context),
-                      ),
-                      if (post.authorType == 'university')
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userId = ref.watch(authControllerProvider).currentUser?.id ?? '';
+    final canDelete =
+        post.authorId == userId ||
+        (post.authorType == 'university' && post.universityId == userId);
+
+    return Card(
+      child: InkWell(
+        onTap: () async {
+          await context.push('/network/post/${post.id}', extra: post);
+          onChanged();
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(AppDimensions.p16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(child: Text(post.authorName.substring(0, 1))),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          'Official University Post',
-                          style: AppTextStyles.bodySmall(
-                            context,
-                            color: Theme.of(context).colorScheme.primary,
+                          post.authorName,
+                          style: AppTextStyles.labelLarge(context),
+                        ),
+                        Text(
+                          post.authorRole,
+                          style: AppTextStyles.bodySmall(context),
+                        ),
+                        if (post.authorType == 'university')
+                          Text(
+                            'Official University Post',
+                            style: AppTextStyles.bodySmall(
+                              context,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                           ),
+                      ],
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      await ref
+                          .read(communityRepositoryProvider)
+                          .toggleFollowAuthor(post.id);
+                      onChanged();
+                    },
+                    child: Text(
+                      post.isFollowingAuthor ? 'Following' : 'Follow',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      post.title,
+                      style: AppTextStyles.titleMedium(context),
+                    ),
+                  ),
+                  Chip(label: Text(post.topic)),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(post.content, maxLines: 3, overflow: TextOverflow.ellipsis),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () async {
+                      await ref
+                          .read(communityRepositoryProvider)
+                          .toggleLike(post.id);
+                      onChanged();
+                    },
+                    icon: Icon(
+                      post.isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
+                    ),
+                  ),
+                  Text('${post.likesCount}'),
+                  const SizedBox(width: 12),
+                  const Icon(Icons.comment_outlined, size: 20),
+                  const SizedBox(width: 4),
+                  Text('${post.commentsCount}'),
+                  const Spacer(),
+                  PopupMenuButton<String>(
+                    onSelected: (value) async {
+                      if (value == 'report') {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Report submitted')),
+                        );
+                        return;
+                      }
+
+                      if (value == 'delete' && canDelete) {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                            title: const Text('Delete this post?'),
+                            content: const Text(
+                              'This action cannot be undone.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('Delete'),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirmed == true) {
+                          try {
+                            await ref
+                                .read(communityRepositoryProvider)
+                                .deletePost(userId, post.id);
+                            onChanged();
+                          } catch (error) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    error is StateError
+                                        ? error.message
+                                        : 'Unable to delete this post.',
+                                  ),
+                                ),
+                              );
+                            }
+                          }
+                        }
+                      }
+                    },
+                    itemBuilder: (_) => [
+                      const PopupMenuItem(
+                        value: 'report',
+                        child: Text('Report'),
+                      ),
+                      if (canDelete)
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Text('Delete'),
                         ),
                     ],
                   ),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    await ref
-                        .read(communityRepositoryProvider)
-                        .toggleFollowAuthor(post.id);
-                    onChanged();
-                  },
-                  child: Text(post.isFollowingAuthor ? 'Following' : 'Follow'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    post.title,
-                    style: AppTextStyles.titleMedium(context),
-                  ),
-                ),
-                Chip(label: Text(post.topic)),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(post.content, maxLines: 3, overflow: TextOverflow.ellipsis),
-            Row(
-              children: [
-                IconButton(
-                  onPressed: () async {
-                    await ref
-                        .read(communityRepositoryProvider)
-                        .toggleLike(post.id);
-                    onChanged();
-                  },
-                  icon: Icon(
-                    post.isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
-                  ),
-                ),
-                Text('${post.likesCount}'),
-                const SizedBox(width: 12),
-                const Icon(Icons.comment_outlined, size: 20),
-                const SizedBox(width: 4),
-                Text('${post.commentsCount}'),
-                const Spacer(),
-                PopupMenuButton<String>(
-                  onSelected: (_) => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Report submitted')),
-                  ),
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'report', child: Text('Report')),
-                  ],
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }

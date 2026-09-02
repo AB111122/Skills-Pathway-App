@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../models/application_model.dart';
 import '../models/opportunity_model.dart';
 import '../models/post_model.dart';
@@ -9,7 +10,9 @@ class FirestoreSerializers {
   static DateTime date(Object? value, {DateTime? fallback}) {
     if (value is Timestamp) return value.toDate();
     if (value is DateTime) return value;
-    if (value is String) return DateTime.tryParse(value) ?? fallback ?? DateTime.now();
+    if (value is String) {
+      return DateTime.tryParse(value) ?? fallback ?? DateTime.now();
+    }
     return fallback ?? DateTime.now();
   }
 
@@ -19,7 +22,6 @@ class FirestoreSerializers {
       'deadline': timestamp(item.deadline),
       'createdAt': timestamp(item.createdAt),
       'updatedAt': FieldValue.serverTimestamp(),
-      'applicationCount': 0,
     };
   }
 
@@ -66,8 +68,10 @@ class FirestoreSerializers {
       opportunityTitle: data['opportunityTitle'] as String? ?? '',
       universityId:
           data['universityId'] as String? ?? data['organizationId'] as String,
-      universityName: data['universityName'] as String? ??
-          data['organizationName'] as String? ?? '',
+      universityName:
+          data['universityName'] as String? ??
+          data['organizationName'] as String? ??
+          '',
       applicationDate: date(data['appliedAt']),
       status: ApplicationStatus.values.firstWhere(
         (value) => value.name == data['status'],
@@ -97,7 +101,10 @@ class FirestoreSerializers {
     };
   }
 
-  static PostModel postFromMap(Map<String, dynamic> data, {required String id}) {
+  static PostModel postFromMap(
+    Map<String, dynamic> data, {
+    required String id,
+  }) {
     return PostModel(
       id: id,
       authorId: data['authorId'] as String? ?? '',

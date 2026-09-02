@@ -197,7 +197,7 @@ class FirebaseOpportunityService implements OpportunityService {
       eligibleFields: const [],
       createdAt: DateTime.now(),
     );
-    await reference.set(_toFirestore(item));
+    await reference.set({..._toFirestore(item), 'applicationCount': 0});
     return item;
   }
 
@@ -284,27 +284,35 @@ class FirebaseOpportunityService implements OpportunityService {
       if (query.isNotEmpty &&
           !('${opp.title} ${opp.organizationName} ${opp.shortDescription} ${opp.requiredSkills.join(' ')} ${opp.eligibleFields.join(' ')}'
               .toLowerCase()
-              .contains(query)))
+              .contains(query))) {
         return false;
-      if (filter.opportunityType != null && opp.type != filter.opportunityType)
+      }
+      if (filter.opportunityType != null &&
+          opp.type != filter.opportunityType) {
         return false;
+      }
       if (filter.location != null &&
           filter.location != 'All' &&
-          !opp.location.toLowerCase().contains(filter.location!.toLowerCase()))
+          !opp.location.toLowerCase().contains(
+            filter.location!.toLowerCase(),
+          )) {
         return false;
+      }
       if (filter.field != null &&
           filter.field != 'All' &&
           !opp.eligibleFields.any(
             (value) =>
                 value.toLowerCase().contains(filter.field!.toLowerCase()),
-          ))
+          )) {
         return false;
+      }
       if (filter.degreeLevel != null &&
           filter.degreeLevel != 'All' &&
           !(opp.degreeLevel ?? '').toLowerCase().contains(
             filter.degreeLevel!.toLowerCase(),
-          ))
+          )) {
         return false;
+      }
       if (filter.isPaidOnly && (!opp.isInternship || !opp.isPaid)) return false;
       if (filter.isVerifiedOnly && !opp.isVerified) return false;
       return true;

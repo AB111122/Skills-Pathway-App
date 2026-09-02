@@ -100,7 +100,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primaryMint.withOpacity(0.4),
+                                color: AppColors.primaryMint.withValues(alpha: 0.4),
                                 blurRadius: 30,
                                 spreadRadius: 5,
                               ),
@@ -132,7 +132,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           textAlign: TextAlign.center,
                           style: AppTextStyles.bodyMedium(
                             context,
-                            color: Colors.white.withOpacity(0.85),
+                            color: Colors.white.withValues(alpha: 0.85),
                           ),
                         ),
                         const Spacer(),
@@ -144,7 +144,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           child: CircularProgressIndicator(
                             strokeWidth: 2.5,
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              AppColors.primaryMint.withOpacity(0.8),
+                              AppColors.primaryMint.withValues(alpha: 0.8),
                             ),
                           ),
                         ),
@@ -153,7 +153,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           'v1.0.0 • Verified Portal',
                           style: AppTextStyles.labelSmall(
                             context,
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.white.withValues(alpha: 0.5),
                           ),
                         ),
                         const SizedBox(height: 24),

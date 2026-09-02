@@ -339,7 +339,7 @@ class _RegisterStudentScreenState extends ConsumerState<RegisterStudentScreen> {
               return ChoiceChip(
                 label: Text(level),
                 selected: isSelected,
-                selectedColor: AppColors.primary.withOpacity(0.15),
+                selectedColor: AppColors.primary.withValues(alpha: 0.15),
                 labelStyle: TextStyle(
                   color: isSelected ? AppColors.primary : null,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
@@ -409,7 +409,7 @@ class _RegisterStudentScreenState extends ConsumerState<RegisterStudentScreen> {
             return FilterChip(
               label: Text(skill),
               selected: isSelected,
-              selectedColor: AppColors.primaryMint.withOpacity(0.2),
+              selectedColor: AppColors.primaryMint.withValues(alpha: 0.2),
               checkmarkColor: AppColors.primary,
               labelStyle: TextStyle(
                 color: isSelected ? AppColors.primaryDark : null,
@@ -441,7 +441,7 @@ class _RegisterStudentScreenState extends ConsumerState<RegisterStudentScreen> {
             return FilterChip(
               label: Text(interest),
               selected: isSelected,
-              selectedColor: AppColors.secondary.withOpacity(0.2),
+              selectedColor: AppColors.secondary.withValues(alpha: 0.2),
               checkmarkColor: AppColors.secondary,
               labelStyle: TextStyle(
                 color: isSelected ? AppColors.secondary : null,

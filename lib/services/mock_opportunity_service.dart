@@ -10,7 +10,7 @@ import 'opportunity_service.dart';
 /// Provides realistic verified and unverified opportunity records for Pakistan & International pathways.
 class MockOpportunityService implements OpportunityService {
   static final MockOpportunityService instance = MockOpportunityService._internal();
-  MockOpportunityService() {}
+  MockOpportunityService();
   MockOpportunityService._internal();
   static const _stateKey = 'opportunity_state';
   bool _hydrated = false;

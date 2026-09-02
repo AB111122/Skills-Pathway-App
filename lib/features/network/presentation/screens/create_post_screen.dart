@@ -22,6 +22,7 @@ class CreatePostScreen extends ConsumerStatefulWidget {
 class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   final _title = TextEditingController();
   final _content = TextEditingController();
+  bool _isSubmitting = false;
   String? _topic;
   final _topics = const [
     'Scholarships',
@@ -42,6 +43,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   }
 
   Future<void> _publish() async {
+    if (_isSubmitting) return;
     if (_title.text.trim().isEmpty ||
         _content.text.trim().isEmpty ||
         _topic == null) {
@@ -50,14 +52,36 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       );
       return;
     }
-    await ref
-        .read(communityRepositoryProvider)
-        .createPost(
-          title: _title.text.trim(),
-          content: _content.text.trim(),
-          topic: _topic!,
-        );
-    if (mounted) Navigator.pop(context, true);
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      await ref
+          .read(communityRepositoryProvider)
+          .createPost(
+            title: _title.text.trim(),
+            content: _content.text.trim(),
+            topic: _topic!,
+          );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Post published successfully.')),
+      );
+      Navigator.pop(context, true);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error is StateError
+                ? error.message
+                : 'Unable to publish your post. Please try again.',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   @override
@@ -91,9 +115,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         ),
         const SizedBox(height: AppDimensions.p24),
         CustomButton(
-          text: 'Publish',
-          icon: Icons.send_rounded,
-          onPressed: _publish,
+          text: _isSubmitting ? 'Publishing...' : 'Publish',
+          icon: _isSubmitting
+              ? Icons.hourglass_top_rounded
+              : Icons.send_rounded,
+          isLoading: _isSubmitting,
+          onPressed: _isSubmitting ? null : _publish,
         ),
       ],
     ),

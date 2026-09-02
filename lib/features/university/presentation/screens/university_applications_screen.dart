@@ -36,15 +36,17 @@ class _UniversityApplicationsScreenState
       body: FutureBuilder<List<OpportunityModel>>(
         future: _opportunities,
         builder: (context, snapshot) {
-          if (!snapshot.hasData)
+          if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
+          }
           final opportunities = snapshot.data!;
           final selected =
               _selected ?? (opportunities.isEmpty ? null : opportunities.first);
-          if (selected == null)
+          if (selected == null) {
             return const Center(
               child: Text('No university opportunities yet.'),
             );
+          }
           return FutureBuilder<List<ApplicationModel>>(
             future: ref
                 .read(universityRepositoryProvider)

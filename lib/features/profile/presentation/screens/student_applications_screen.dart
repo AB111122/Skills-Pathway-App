@@ -17,10 +17,12 @@ class StudentApplicationsScreen extends ConsumerWidget {
       body: FutureBuilder<List<ApplicationModel>>(
         future: ref.watch(applicationRepositoryProvider).forStudent(studentId),
         builder: (context, snapshot) {
-          if (!snapshot.hasData)
+          if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
-          if (snapshot.data!.isEmpty)
+          }
+          if (snapshot.data!.isEmpty) {
             return const Center(child: Text('No applications yet.'));
+          }
           return ListView.separated(
             padding: const EdgeInsets.all(AppDimensions.p20),
             itemCount: snapshot.data!.length,

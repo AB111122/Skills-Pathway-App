@@ -39,10 +39,10 @@ class VerifiedBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: AppColors.verifiedBadge.withOpacity(0.12),
+        color: AppColors.verifiedBadge.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.verifiedBadge.withOpacity(0.35),
+          color: AppColors.verifiedBadge.withValues(alpha: 0.35),
           width: 1,
         ),
       ),

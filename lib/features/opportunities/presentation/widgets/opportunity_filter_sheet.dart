@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/theme/text_styles.dart';
@@ -247,7 +248,7 @@ class _OpportunityFilterSheetState extends State<OpportunityFilterSheet> {
                         ),
                         Switch(
                           value: _isVerifiedOnly,
-                          activeColor: AppColors.verifiedBadge,
+                          activeThumbColor: AppColors.verifiedBadge,
                           onChanged: (val) {
                             setState(() => _isVerifiedOnly = val);
                           },
@@ -271,10 +272,14 @@ class _OpportunityFilterSheetState extends State<OpportunityFilterSheet> {
                       return ChoiceChip(
                         label: Text(loc),
                         selected: isSelected,
-                        selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                        selectedColor: AppColors.primary.withValues(
+                          alpha: 0.15,
+                        ),
                         labelStyle: TextStyle(
                           color: isSelected ? AppColors.primary : null,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.normal,
                         ),
                         onSelected: (_) => setState(() => _location = loc),
                       );
@@ -296,10 +301,14 @@ class _OpportunityFilterSheetState extends State<OpportunityFilterSheet> {
                       return ChoiceChip(
                         label: Text(f),
                         selected: isSelected,
-                        selectedColor: AppColors.secondary.withValues(alpha: 0.15),
+                        selectedColor: AppColors.secondary.withValues(
+                          alpha: 0.15,
+                        ),
                         labelStyle: TextStyle(
                           color: isSelected ? AppColors.secondary : null,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.normal,
                         ),
                         onSelected: (_) => setState(() => _field = f),
                       );
@@ -321,10 +330,14 @@ class _OpportunityFilterSheetState extends State<OpportunityFilterSheet> {
                       return ChoiceChip(
                         label: Text(deg),
                         selected: isSelected,
-                        selectedColor: AppColors.accentGold.withValues(alpha: 0.2),
+                        selectedColor: AppColors.accentGold.withValues(
+                          alpha: 0.2,
+                        ),
                         labelStyle: TextStyle(
                           color: isSelected ? AppColors.accentGold : null,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.normal,
                         ),
                         onSelected: (_) => setState(() => _degreeLevel = deg),
                       );
@@ -418,7 +431,9 @@ class _OpportunityFilterSheetState extends State<OpportunityFilterSheet> {
             style: TextStyle(
               fontSize: 13,
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              color: isSelected ? AppColors.primary : AppColors.textSecondaryLight,
+              color: isSelected
+                  ? AppColors.primary
+                  : AppColors.textSecondaryLight,
             ),
           ),
         ),

@@ -22,6 +22,7 @@ abstract class CommunityRepository {
   Future<PostModel> toggleLike(String postId);
   Future<PostModel> toggleFollowAuthor(String postId);
   Future<void> reportPost(String postId, String reason);
+  Future<void> deletePost(String userId, String postId);
   List<PostModel> postsForAuthor(String authorId);
   Future<List<PostModel>> getPostsByAuthor(String authorId);
   Future<PostModel> updateUniversityPost(String universityId, PostModel post);
@@ -31,7 +32,7 @@ abstract class CommunityRepository {
 class MockCommunityRepository implements CommunityRepository {
   static final MockCommunityRepository instance =
       MockCommunityRepository._internal();
-  MockCommunityRepository() {}
+  MockCommunityRepository();
   MockCommunityRepository._internal();
   final List<PostModel> _posts = [
     PostModel(
@@ -100,6 +101,7 @@ class MockCommunityRepository implements CommunityRepository {
   };
   final Uuid _uuid = const Uuid();
 
+  @override
   List<PostModel> postsForAuthor(String authorId) =>
       _posts.where((post) => post.authorId == authorId).toList();
 
@@ -179,10 +181,11 @@ class MockCommunityRepository implements CommunityRepository {
     );
     (_comments[postId] ??= []).add(comment);
     final index = _posts.indexWhere((post) => post.id == postId);
-    if (index >= 0)
+    if (index >= 0) {
       _posts[index] = _posts[index].copyWith(
         commentsCount: _comments[postId]!.length,
       );
+    }
     return comment;
   }
 
@@ -208,6 +211,20 @@ class MockCommunityRepository implements CommunityRepository {
 
   @override
   Future<void> reportPost(String postId, String reason) async {}
+
+  @override
+  Future<void> deletePost(String userId, String postId) async {
+    final index = _posts.indexWhere((post) => post.id == postId);
+    if (index < 0) return;
+    final post = _posts[index];
+    final isOwner = post.authorId == userId;
+    final isUniversityOwner =
+        post.authorType == 'university' && post.universityId == userId;
+    if (!isOwner && !isUniversityOwner) {
+      throw StateError('You can only delete your own posts.');
+    }
+    _posts.removeAt(index);
+  }
 
   @override
   Future<PostModel> updateUniversityPost(

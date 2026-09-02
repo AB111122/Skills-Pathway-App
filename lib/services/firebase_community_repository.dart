@@ -170,6 +170,34 @@ class FirebaseCommunityRepository implements CommunityRepository {
   }
 
   @override
+  Future<void> deletePost(String userId, String postId) async {
+    final user = _requireUser();
+    if (user.uid != userId) {
+      throw StateError('You can only delete your own posts.');
+    }
+
+    final snapshot = await _posts.doc(postId).get();
+    if (!snapshot.exists) return;
+
+    final data = snapshot.data() ?? {};
+    final authorId = data['authorId'] as String? ?? '';
+    final authorType = data['authorType'] as String? ?? 'student';
+    final universityId = data['universityId'] as String?;
+
+    final isOwner = authorId == user.uid;
+    final isUniversityOwner =
+        authorType == 'university' &&
+        universityId == user.uid &&
+        authorId == user.uid;
+
+    if (!isOwner && !isUniversityOwner) {
+      throw StateError('You can only delete your own posts.');
+    }
+
+    await _posts.doc(postId).delete();
+  }
+
+  @override
   List<PostModel> postsForAuthor(String authorId) => const [];
 
   @override

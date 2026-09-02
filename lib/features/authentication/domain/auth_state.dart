@@ -22,6 +22,8 @@ class AuthState {
     this.isFirstTime = true,
   });
 
+  bool get hasRole => currentUser != null;
+
   bool get isStudent => currentUser?.role == UserRole.student;
   bool get isOrganization => currentUser?.role == UserRole.organization;
 

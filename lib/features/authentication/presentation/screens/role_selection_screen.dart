@@ -36,7 +36,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
               Container(
                 padding: const EdgeInsets.all(AppDimensions.p12),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -174,8 +174,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? (isDark
-                  ? AppColors.primary.withOpacity(0.2)
-                  : AppColors.primary.withOpacity(0.06))
+                  ? AppColors.primary.withValues(alpha: 0.2)
+                  : AppColors.primary.withValues(alpha: 0.06))
               : (isDark ? AppColors.cardDark : AppColors.cardLight),
           borderRadius: AppDimensions.roundedLarge,
           border: Border.all(
@@ -187,7 +187,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.12),
+                    color: AppColors.primary.withValues(alpha: 0.12),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -225,8 +225,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                     ),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppColors.primary.withOpacity(0.15)
-                          : AppColors.cardBorderLight.withOpacity(0.5),
+                          ? AppColors.primary.withValues(alpha: 0.15)
+                          : AppColors.cardBorderLight.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
