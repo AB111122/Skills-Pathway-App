@@ -23,10 +23,11 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
   final _topics = const [
     'General',
     'Admissions',
-    'Careers',
     'All topics',
     'Scholarships',
     'Internships',
+    'Jobs',
+    'Events',
     'Career Advice',
     'University',
     'Technology',

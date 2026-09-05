@@ -1,5 +1,7 @@
 import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../models/opportunity_filter_model.dart';
 import '../models/opportunity_model.dart';
 import '../models/application_model.dart';
@@ -9,7 +11,8 @@ import 'opportunity_service.dart';
 /// [MOCK IMPLEMENTATION]
 /// Provides realistic verified and unverified opportunity records for Pakistan & International pathways.
 class MockOpportunityService implements OpportunityService {
-  static final MockOpportunityService instance = MockOpportunityService._internal();
+  static final MockOpportunityService instance =
+      MockOpportunityService._internal();
   MockOpportunityService();
   MockOpportunityService._internal();
   static const _stateKey = 'opportunity_state';
@@ -24,12 +27,14 @@ class MockOpportunityService implements OpportunityService {
       deadline: DateTime.now().add(const Duration(days: 4)),
       isVerified: true, // Strictly verified by HEC
       stipendOrFunding: '100% Tuition Fee + PKR 15,000 / mo',
-      shortDescription:
-          'Full tuition waiver and monthly living allowance for undergraduate students studying in recognized Pakistani public universities.',
-      fullDescription:
-          'The Higher Education Commission (HEC) of Pakistan offers the Indigenous Scholarship Scheme to promote higher education accessibility across all provinces. Eligible undergraduate students will receive full semester tuition coverage, hostel fee allowance, and a monthly maintenance stipend of PKR 15,000.',
+      shortDescription: 'Full tuition waiver and monthly living allowance for undergraduate students studying in recognized Pakistani public universities.',
+      fullDescription: 'The Higher Education Commission (HEC) of Pakistan offers the Indigenous Scholarship Scheme to promote higher education accessibility across all provinces. Eligible undergraduate students will receive full semester tuition coverage, hostel fee allowance, and a monthly maintenance stipend of PKR 15,000.',
       officialUrl: 'https://hec.gov.pk/english/scholarships/indigenous',
-      requiredSkills: ['Academic Excellence', 'Pakistani Domicile', 'Full-time Enrollment'],
+      requiredSkills: [
+        'Academic Excellence',
+        'Pakistani Domicile',
+        'Full-time Enrollment',
+      ],
       eligibleFields: [
         'Computer Science & AI',
         'Software Engineering',
@@ -69,12 +74,16 @@ class MockOpportunityService implements OpportunityService {
       isVerified: true, // Strictly verified corporate program
       isPaid: true,
       stipendOrFunding: 'PKR 45,000 / month',
-      shortDescription:
-          'Hands-on 8-week corporate tech & product immersion working on JazzCash, digital products, and telecom cloud infrastructure.',
-      fullDescription:
-          'Jazz Summer Xplore is the premier internship initiative by VEON/Jazz in Pakistan. Interns are placed directly into cross-functional agile squads covering Mobile Engineering, Fintech Product Design, Data Analytics, Cybersecurity, and Business Strategy.',
+      shortDescription: 'Hands-on 8-week corporate tech & product immersion working on JazzCash, digital products, and telecom cloud infrastructure.',
+      fullDescription: 'Jazz Summer Xplore is the premier internship initiative by VEON/Jazz in Pakistan. Interns are placed directly into cross-functional agile squads covering Mobile Engineering, Fintech Product Design, Data Analytics, Cybersecurity, and Business Strategy.',
       officialUrl: 'https://jazz.com.pk/careers/summer-xplore',
-      requiredSkills: ['Python', 'SQL', 'Flutter', 'Problem Solving', 'Data Analysis'],
+      requiredSkills: [
+        'Python',
+        'SQL',
+        'Flutter',
+        'Problem Solving',
+        'Data Analysis',
+      ],
       eligibleFields: [
         'Computer Science & AI',
         'Software Engineering',
@@ -112,12 +121,16 @@ class MockOpportunityService implements OpportunityService {
       isVerified: true, // Strictly verified IT leader
       isPaid: true,
       stipendOrFunding: 'PKR 65,000 / month',
-      shortDescription:
-          'Fast-track trainee engineer onboarding in Cloud Computing, Flutter, .NET, and Enterprise AI with guaranteed permanent placement.',
-      fullDescription:
-          'Systems Limited, Pakistan\'s largest IT exporter and tech powerhouse, is recruiting top graduating seniors and fresh graduates for its 2026 Associate Software Engineer cohort. Trainees undergo 3 months of rigorous enterprise training with full compensation.',
+      shortDescription: 'Fast-track trainee engineer onboarding in Cloud Computing, Flutter, .NET, and Enterprise AI with guaranteed permanent placement.',
+      fullDescription: 'Systems Limited, Pakistan\'s largest IT exporter and tech powerhouse, is recruiting top graduating seniors and fresh graduates for its 2026 Associate Software Engineer cohort. Trainees undergo 3 months of rigorous enterprise training with full compensation.',
       officialUrl: 'https://systemsltd.com/careers/fresh-graduates',
-      requiredSkills: ['OOP', 'Data Structures & Algorithms', 'Dart/Flutter', 'C# / Java', 'SQL'],
+      requiredSkills: [
+        'OOP',
+        'Data Structures & Algorithms',
+        'Dart/Flutter',
+        'C# / Java',
+        'SQL',
+      ],
       eligibleFields: [
         'Computer Science & AI',
         'Software Engineering',
@@ -151,14 +164,17 @@ class MockOpportunityService implements OpportunityService {
       type: OpportunityType.scholarship,
       location: 'United Kingdom (All Universities)',
       deadline: DateTime.now().add(const Duration(days: 45)),
-      isVerified: true, // Strictly verified international government scholarship
+      isVerified:
+          true, // Strictly verified international government scholarship
       stipendOrFunding: 'Fully Funded (100% Tuition, Flights & Monthly Living)',
-      shortDescription:
-          'Prestigious fully-funded UK government scholarship for Pakistani leaders to undertake a 1-year Master\'s degree at any UK university.',
-      fullDescription:
-          'Chevening is the UK Government\'s global scholarship program, funded by the FCDO and partner organizations. Pakistan is one of the largest recipient countries. The scholarship provides full financial coverage for any master\'s course at Oxford, Cambridge, Imperial, LSE, Manchester, and other premier UK institutions.',
+      shortDescription: 'Prestigious fully-funded UK government scholarship for Pakistani leaders to undertake a 1-year Master\'s degree at any UK university.',
+      fullDescription: 'Chevening is the UK Government\'s global scholarship program, funded by the FCDO and partner organizations. Pakistan is one of the largest recipient countries. The scholarship provides full financial coverage for any master\'s course at Oxford, Cambridge, Imperial, LSE, Manchester, and other premier UK institutions.',
       officialUrl: 'https://chevening.org/scholarship/pakistan',
-      requiredSkills: ['Leadership Potential', '2+ Years Work Experience', 'Academic Merit'],
+      requiredSkills: [
+        'Leadership Potential',
+        '2+ Years Work Experience',
+        'Academic Merit',
+      ],
       eligibleFields: [
         'Computer Science & AI',
         'Business & Finance',
@@ -198,10 +214,8 @@ class MockOpportunityService implements OpportunityService {
       deadline: DateTime.now().add(const Duration(days: 22)),
       isVerified: true, // Strictly verified university aid
       stipendOrFunding: 'Up to 100% Tuition Fee + Hostel Support',
-      shortDescription:
-          'Comprehensive financial aid for newly admitted undergraduate engineering, computing, and social sciences students.',
-      fullDescription:
-          'NUST is committed to ensuring that no talented student is denied education due to financial hardship. The NUST Need-Based Scholarship Trust provides full or partial tuition grants and hostel assistance based on family income evaluation.',
+      shortDescription: 'Comprehensive financial aid for newly admitted undergraduate engineering, computing, and social sciences students.',
+      fullDescription: 'NUST is committed to ensuring that no talented student is denied education due to financial hardship. The NUST Need-Based Scholarship Trust provides full or partial tuition grants and hostel assistance based on family income evaluation.',
       officialUrl: 'https://nust.edu.pk/admissions/financial-aid',
       requiredSkills: ['NUST NET Qualified', 'Demonstrated Financial Need'],
       eligibleFields: [
@@ -240,12 +254,15 @@ class MockOpportunityService implements OpportunityService {
       isVerified: true, // Strictly verified MNC
       isPaid: true,
       stipendOrFunding: 'PKR 60,000 / month',
-      shortDescription:
-          'Immersive FMCG summer internship tackling real-world brand marketing, supply chain robotics, and finance transformation projects.',
-      fullDescription:
-          'The Unilever Internship Program (ULIP) gives top university students hands-on ownership of real business projects from day one. You will work alongside seasoned leaders on iconic brands like Lifebuoy, Surf Excel, Knorr, and Sunsilk.',
+      shortDescription: 'Immersive FMCG summer internship tackling real-world brand marketing, supply chain robotics, and finance transformation projects.',
+      fullDescription: 'The Unilever Internship Program (ULIP) gives top university students hands-on ownership of real business projects from day one. You will work alongside seasoned leaders on iconic brands like Lifebuoy, Surf Excel, Knorr, and Sunsilk.',
       officialUrl: 'https://unilever.pk/careers/students-and-graduates',
-      requiredSkills: ['Business Analytics', 'Digital Marketing', 'Supply Chain', 'Communication'],
+      requiredSkills: [
+        'Business Analytics',
+        'Digital Marketing',
+        'Supply Chain',
+        'Communication',
+      ],
       eligibleFields: [
         'Business & Finance',
         'Supply Chain & Industrial Engineering',
@@ -263,10 +280,7 @@ class MockOpportunityService implements OpportunityService {
         'Direct project exposure with real business impact.',
         'Direct progression to the Unilever Future Leaders Program (UFLP) assessment center.',
       ],
-      requiredDocuments: [
-        'Resume / CV',
-        'Academic Transcript',
-      ],
+      requiredDocuments: ['Resume / CV', 'Academic Transcript'],
       createdAt: DateTime.now().subtract(const Duration(days: 7)),
     ),
 
@@ -279,12 +293,13 @@ class MockOpportunityService implements OpportunityService {
       deadline: DateTime.now().add(const Duration(days: 35)),
       isVerified: true, // Strictly verified
       stipendOrFunding: '100% Fully Funded (Tuition, Hostel, Books, Stipend)',
-      shortDescription:
-          'Transformative full scholarship program for matric/intermediate students from remote & underprivileged areas of Pakistan.',
-      fullDescription:
-          'The LUMS NOP initiative identifies brilliant students from across Pakistan and prepares them for the LUMS admission test through fully-funded summer coaching sessions. Successful candidates receive complete financial aid for their 4-year undergraduate degree.',
+      shortDescription: 'Transformative full scholarship program for matric/intermediate students from remote & underprivileged areas of Pakistan.',
+      fullDescription: 'The LUMS NOP initiative identifies brilliant students from across Pakistan and prepares them for the LUMS admission test through fully-funded summer coaching sessions. Successful candidates receive complete financial aid for their 4-year undergraduate degree.',
       officialUrl: 'https://nop.lums.edu.pk',
-      requiredSkills: ['High Matric / Intermediate Marks', 'Underprivileged Background'],
+      requiredSkills: [
+        'High Matric / Intermediate Marks',
+        'Underprivileged Background',
+      ],
       eligibleFields: [
         'Computer Science & AI',
         'Business & Finance',
@@ -321,12 +336,13 @@ class MockOpportunityService implements OpportunityService {
       isVerified: true, // Strictly verified
       isPaid: true,
       stipendOrFunding: 'PKR 55,000 / month + Accommodation',
-      shortDescription:
-          'Structured plant engineering and industrial automation traineeship for fresh engineering graduates.',
-      fullDescription:
-          'Fatima Fertilizer Company Limited is inviting applications for its Graduate Trainee Engineer (GTE) program. Selected candidates undergo intensive technical, safety, and managerial training at our modern chemical and fertilizer complex.',
+      shortDescription: 'Structured plant engineering and industrial automation traineeship for fresh engineering graduates.',
+      fullDescription: 'Fatima Fertilizer Company Limited is inviting applications for its Graduate Trainee Engineer (GTE) program. Selected candidates undergo intensive technical, safety, and managerial training at our modern chemical and fertilizer complex.',
       officialUrl: 'https://fatima-group.com/careers',
-      requiredSkills: ['Chemical / Mechanical / Electrical Engineering', 'Process Safety'],
+      requiredSkills: [
+        'Chemical / Mechanical / Electrical Engineering',
+        'Process Safety',
+      ],
       eligibleFields: [
         'Electrical / Mechanical Engineering',
         'Chemical Engineering',
@@ -359,13 +375,16 @@ class MockOpportunityService implements OpportunityService {
       location: 'United States (All Universities)',
       deadline: DateTime.now().add(const Duration(days: 60)),
       isVerified: true, // Strictly verified premier US program
-      stipendOrFunding: 'Fully Funded (Tuition, Flights, Health, US Living Stipend)',
-      shortDescription:
-          'The largest Fulbright program in the world, sending over 130 Pakistani students every year for Master\'s and PhD studies in the USA.',
-      fullDescription:
-          'The United States Educational Foundation in Pakistan (USEFP) administers the Fulbright scholarship. It funds complete tuition, textbooks, airfare, a monthly living stipend, and health insurance for full-time Master\'s or PhD studies at top American universities.',
+      stipendOrFunding:
+          'Fully Funded (Tuition, Flights, Health, US Living Stipend)',
+      shortDescription: 'The largest Fulbright program in the world, sending over 130 Pakistani students every year for Master\'s and PhD studies in the USA.',
+      fullDescription: 'The United States Educational Foundation in Pakistan (USEFP) administers the Fulbright scholarship. It funds complete tuition, textbooks, airfare, a monthly living stipend, and health insurance for full-time Master\'s or PhD studies at top American universities.',
       officialUrl: 'https://usefp.org/scholarships/fulbright-student',
-      requiredSkills: ['GRE Test', 'Academic Excellence', 'Community Commitment'],
+      requiredSkills: [
+        'GRE Test',
+        'Academic Excellence',
+        'Community Commitment',
+      ],
       eligibleFields: [
         'Computer Science & AI',
         'Energy & Engineering',
@@ -405,16 +424,11 @@ class MockOpportunityService implements OpportunityService {
       isVerified: false, // Community submitted, not yet verified
       isPaid: false,
       stipendOrFunding: 'Mentorship & Certificate',
-      shortDescription:
-          'Contribute to public digital goods for Pakistan while being mentored by senior engineers from Silicon Valley and Europe.',
-      fullDescription:
-          'PakTech Fellowship pairs aspiring student developers with veteran open-source maintainers. Build production-grade Flutter, Python, and Rust tools while learning Git workflow, CI/CD, and real-world system architecture.',
+      shortDescription: 'Contribute to public digital goods for Pakistan while being mentored by senior engineers from Silicon Valley and Europe.',
+      fullDescription: 'PakTech Fellowship pairs aspiring student developers with veteran open-source maintainers. Build production-grade Flutter, Python, and Rust tools while learning Git workflow, CI/CD, and real-world system architecture.',
       officialUrl: 'https://github.com/paktech-fellowship/winter-2026',
       requiredSkills: ['Git', 'Flutter', 'Python', 'Open Source'],
-      eligibleFields: [
-        'Computer Science & AI',
-        'Software Engineering',
-      ],
+      eligibleFields: ['Computer Science & AI', 'Software Engineering'],
       degreeLevel: 'Undergraduate',
       duration: '6 Weeks',
       eligibilityCriteria: [
@@ -442,12 +456,19 @@ class MockOpportunityService implements OpportunityService {
 
     if (filter == null) {
       return List.unmodifiable(
-        _mockDatabase.where((item) => item.status != OpportunityStatus.closed),
+        _mockDatabase.where(
+          (item) =>
+              item.status == OpportunityStatus.published &&
+              item.deadline.isAfter(DateTime.now()),
+        ),
       );
     }
 
     return _mockDatabase.where((opp) {
-      if (opp.status == OpportunityStatus.closed) return false;
+      if (opp.status != OpportunityStatus.published ||
+          !opp.deadline.isAfter(DateTime.now())) {
+        return false;
+      }
       // 1. Search Query
       if (filter.searchQuery.trim().isNotEmpty) {
         final query = filter.searchQuery.toLowerCase().trim();
@@ -491,7 +512,9 @@ class MockOpportunityService implements OpportunityService {
           filter.field!.isNotEmpty) {
         final fieldLower = filter.field!.toLowerCase();
         final matchesField = opp.eligibleFields.any(
-          (f) => f.toLowerCase().contains(fieldLower) || fieldLower.contains(f.toLowerCase()),
+          (f) =>
+              f.toLowerCase().contains(fieldLower) ||
+              fieldLower.contains(f.toLowerCase()),
         );
         if (!matchesField) return false;
       }
@@ -501,9 +524,9 @@ class MockOpportunityService implements OpportunityService {
           filter.degreeLevel != 'All' &&
           filter.degreeLevel!.isNotEmpty) {
         if (opp.degreeLevel != null &&
-            !opp.degreeLevel!
-                .toLowerCase()
-                .contains(filter.degreeLevel!.toLowerCase())) {
+            !opp.degreeLevel!.toLowerCase().contains(
+              filter.degreeLevel!.toLowerCase(),
+            )) {
           return false;
         }
       }
@@ -565,8 +588,10 @@ class MockOpportunityService implements OpportunityService {
     final index = _mockDatabase.indexWhere((opp) => opp.id == id);
     if (index != -1) {
       final current = _mockDatabase[index];
-      if (current.isClosed || current.deadline.isBefore(DateTime.now())) return false;
-      final existing = await MockApplicationRepository.instance.findForStudentAndOpportunity('usr_student_01', id);
+      if (current.isClosed || current.deadline.isBefore(DateTime.now()))
+        return false;
+      final existing = await MockApplicationRepository.instance
+          .findForStudentAndOpportunity('usr_student_01', id);
       if (existing != null) return false;
       _mockDatabase[index] = current.copyWith(
         isApplied: true,
@@ -622,9 +647,13 @@ class MockOpportunityService implements OpportunityService {
     return _mockDatabase.where((opp) => opp.isApplied).toList();
   }
 
-  Future<List<OpportunityModel>> getManagedOpportunities(String organizationId) async {
+  Future<List<OpportunityModel>> getManagedOpportunities(
+    String organizationId,
+  ) async {
     await _hydrate();
-    return _mockDatabase.where((item) => item.organizationId == organizationId).toList();
+    return _mockDatabase
+        .where((item) => item.organizationId == organizationId)
+        .toList();
   }
 
   Future<void> _hydrate() async {
@@ -717,7 +746,10 @@ class MockOpportunityService implements OpportunityService {
     await _persist();
   }
 
-  Future<void> closeUniversityOpportunity(String organizationId, String id) async {
+  Future<void> closeUniversityOpportunity(
+    String organizationId,
+    String id,
+  ) async {
     final item = await getOpportunityById(id);
     if (item == null) throw StateError('Opportunity not found.');
     await updateUniversityOpportunity(
@@ -726,7 +758,10 @@ class MockOpportunityService implements OpportunityService {
     );
   }
 
-  Future<void> deleteUniversityOpportunity(String organizationId, String id) async {
+  Future<void> deleteUniversityOpportunity(
+    String organizationId,
+    String id,
+  ) async {
     final item = await getOpportunityById(id);
     if (item == null || item.organizationId != organizationId) {
       throw StateError('You can only manage your own opportunities.');

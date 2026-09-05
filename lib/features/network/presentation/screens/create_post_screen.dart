@@ -25,8 +25,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   bool _isSubmitting = false;
   String? _topic;
   final _topics = const [
+    'General',
+    'Admissions',
     'Scholarships',
     'Internships',
+    'Jobs',
+    'Events',
     'Career Advice',
     'University',
     'Technology',

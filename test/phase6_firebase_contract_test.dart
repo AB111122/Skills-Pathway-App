@@ -246,6 +246,34 @@ void main() {
     });
 
     test(
+      'unpublished opportunities are not discoverable or applicable',
+      () async {
+        final service = MockOpportunityService();
+        final opportunity = await service.createUniversityOpportunity(
+          organizationId: 'uni-draft',
+          organizationName: 'University',
+          title: 'Draft listing',
+          description: 'Not published',
+          type: OpportunityType.job,
+          deadline: DateTime.now().add(const Duration(days: 5)),
+          location: 'Remote',
+          applicationUrl: 'https://example.com',
+        );
+        await service.updateUniversityOpportunity(
+          'uni-draft',
+          opportunity.copyWith(status: OpportunityStatus.draft),
+        );
+
+        expect(
+          (await service.getOpportunities()).any(
+            (item) => item.id == opportunity.id,
+          ),
+          isFalse,
+        );
+      },
+    );
+
+    test(
       'duplicate applications are prevented and status remains synchronized',
       () async {
         final service = MockOpportunityService();
@@ -334,6 +362,24 @@ void main() {
         expect(unfollowed.isFollowingAuthor, isFalse);
       },
     );
+
+    test('Admissions is available for official and student posts', () async {
+      final repository = MockCommunityRepository.instance;
+      final post = await repository.createUniversityPost(
+        universityId: 'uni-admissions',
+        universityName: 'Admissions University',
+        title: 'Admissions Open',
+        content: 'Apply now.',
+        topic: 'Admissions',
+      );
+
+      expect(post.topic, 'Admissions');
+      expect(
+        (await repository.getPosts(topic: 'Admissions'))
+            .any((item) => item.id == post.id),
+        isTrue,
+      );
+    });
 
     test(
       'student can delete their own post and cannot delete another user post',

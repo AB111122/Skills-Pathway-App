@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/theme/text_styles.dart';
@@ -19,10 +20,7 @@ import '../widgets/apply_confirmation_dialog.dart';
 class OpportunityDetailScreen extends ConsumerStatefulWidget {
   final String opportunityId;
 
-  const OpportunityDetailScreen({
-    super.key,
-    required this.opportunityId,
-  });
+  const OpportunityDetailScreen({super.key, required this.opportunityId});
 
   @override
   ConsumerState<OpportunityDetailScreen> createState() =>
@@ -47,9 +45,7 @@ class _OpportunityDetailScreenState
       builder: (_) => ApplyConfirmationDialog(
         opportunity: opp,
         onApplied: () {
-          ref
-              .read(opportunityControllerProvider.notifier)
-              .markApplied(opp.id);
+          ref.read(opportunityControllerProvider.notifier).markApplied(opp.id);
         },
       ),
     );
@@ -64,11 +60,13 @@ class _OpportunityDetailScreenState
             const ListTile(title: Text('Deadline alert')),
             for (final option in ReminderType.values)
               ListTile(
-                title: Text(option == ReminderType.oneDay
-                    ? '1 day before'
-                    : option == ReminderType.threeDays
-                        ? '3 days before'
-                        : '7 days before'),
+                title: Text(
+                  option == ReminderType.oneDay
+                      ? '1 day before'
+                      : option == ReminderType.threeDays
+                      ? '3 days before'
+                      : '7 days before',
+                ),
                 onTap: () => Navigator.pop(context, option),
               ),
             ListTile(
@@ -99,13 +97,21 @@ class _OpportunityDetailScreenState
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(type == null ? 'Deadline alert removed.' : 'Deadline alert saved.')),
+          SnackBar(
+            content: Text(
+              type == null
+                  ? 'Deadline alert removed.'
+                  : 'Deadline alert saved.',
+            ),
+          ),
         );
       }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.toString().replaceFirst('Bad state: ', ''))),
+          SnackBar(
+            content: Text(error.toString().replaceFirst('Bad state: ', '')),
+          ),
         );
       }
     }
@@ -116,11 +122,12 @@ class _OpportunityDetailScreenState
     final state = ref.watch(opportunityControllerProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final opp = state.selectedOpportunity ??
+    final opp =
+        state.selectedOpportunity ??
         state.opportunities.cast<OpportunityModel?>().firstWhere(
-              (o) => o?.id == widget.opportunityId,
-              orElse: () => null,
-            );
+          (o) => o?.id == widget.opportunityId,
+          orElse: () => null,
+        );
 
     if (state.isLoading && opp == null) {
       return Scaffold(
@@ -146,8 +153,9 @@ class _OpportunityDetailScreenState
     final isClosed = opp.isClosed || !opp.deadline.isAfter(DateTime.now());
 
     return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor: isDark
+          ? AppColors.backgroundDark
+          : AppColors.backgroundLight,
       appBar: AppBar(
         title: Text(
           opp.isScholarship ? 'Scholarship Details' : 'Internship Details',
@@ -166,13 +174,15 @@ class _OpportunityDetailScreenState
             ),
             tooltip: 'Set Deadline Reminder',
             onPressed: () {
-                  _selectAlert(opp);
+              _selectAlert(opp);
             },
           ),
           // Bookmark save action
           IconButton(
             icon: Icon(
-              opp.isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+              opp.isSaved
+                  ? Icons.bookmark_rounded
+                  : Icons.bookmark_border_rounded,
               color: opp.isSaved
                   ? AppColors.accentGold
                   : (isDark ? Colors.white : AppColors.textPrimaryLight),
@@ -342,11 +352,11 @@ class _OpportunityDetailScreenState
                                       Expanded(
                                         child: Text(
                                           doc,
-                                          style: AppTextStyles.bodySmall(
-                                            context,
-                                          ).copyWith(
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                          style:
+                                              AppTextStyles.bodySmall(context)
+                                                  .copyWith(
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
                                         ),
                                       ),
                                     ],
@@ -391,9 +401,7 @@ class _OpportunityDetailScreenState
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  opp.isVerified
-                                      ? 'Verified Opportunity'
-                                      : 'Community Listing (Verification Pending)',
+                                  opp.isVerified ? 'Verified Opportunity' : 'Community Listing (Verification Pending)',
                                   style: AppTextStyles.titleSmall(context),
                                 ),
                                 const SizedBox(height: 2),
@@ -458,8 +466,8 @@ class _OpportunityDetailScreenState
                         color: opp.isSaved
                             ? AppColors.accentGold
                             : (isDark
-                                ? AppColors.textMutedDark
-                                : AppColors.textSecondaryLight),
+                                  ? AppColors.textMutedDark
+                                  : AppColors.textSecondaryLight),
                       ),
                       onPressed: () {
                         ref
@@ -476,7 +484,13 @@ class _OpportunityDetailScreenState
                         ? Container(
                             height: AppDimensions.buttonHeight,
                             alignment: Alignment.center,
-                            child: Text('Application Closed', style: AppTextStyles.labelLarge(context, color: AppColors.error)),
+                            child: Text(
+                              'Application Closed',
+                              style: AppTextStyles.labelLarge(
+                                context,
+                                color: AppColors.error,
+                              ),
+                            ),
                           )
                         : opp.isApplied
                         ? Container(
@@ -499,7 +513,7 @@ class _OpportunityDetailScreenState
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    'Applied via Official Portal',
+                                    'Application submitted',
                                     style: AppTextStyles.labelLarge(
                                       context,
                                       color: AppColors.success,
@@ -619,10 +633,7 @@ class _OpportunityDetailScreenState
           const SizedBox(height: 16),
 
           // Title
-          Text(
-            opp.title,
-            style: AppTextStyles.titleLarge(context),
-          ),
+          Text(opp.title, style: AppTextStyles.titleLarge(context)),
           const SizedBox(height: 16),
 
           // Badges Row
@@ -809,10 +820,7 @@ class _OpportunityDetailScreenState
             children: [
               Icon(icon, size: 20, color: AppColors.primary),
               const SizedBox(width: 8),
-              Text(
-                title,
-                style: AppTextStyles.titleSmall(context),
-              ),
+              Text(title, style: AppTextStyles.titleSmall(context)),
             ],
           ),
           const SizedBox(height: 12),

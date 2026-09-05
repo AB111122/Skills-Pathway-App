@@ -76,10 +76,11 @@ class MockApplicationRepository implements ApplicationRepository {
     ApplicationStatus status,
   ) async {
     final index = _applications.indexWhere((item) => item.id == applicationId);
-    if (index < 0 || _applications[index].universityId != universityId)
+    if (index < 0 || _applications[index].universityId != universityId) {
       throw StateError(
         'You can only update applicants for your own university.',
       );
+    }
     _applications[index] = _applications[index].copyWith(status: status);
     return _applications[index];
   }
@@ -91,8 +92,9 @@ class MockApplicationRepository implements ApplicationRepository {
   ) async {
     for (final application in _applications) {
       if (application.studentId == studentId &&
-          application.opportunityId == opportunityId)
+          application.opportunityId == opportunityId) {
         return application;
+      }
     }
     return null;
   }

@@ -35,7 +35,10 @@ class FirebaseOpportunityService implements OpportunityService {
     final items = <OpportunityModel>[];
     for (final document in snapshot.docs) {
       final opportunity = _fromSnapshot(document);
-      if (opportunity.deadline.isBefore(DateTime.now())) continue;
+      if (opportunity.status != OpportunityStatus.published ||
+          !opportunity.deadline.isAfter(DateTime.now())) {
+        continue;
+      }
       items.add(await _withStudentState(opportunity));
     }
     return _applyFilter(items, filter);
@@ -73,6 +76,7 @@ class FirebaseOpportunityService implements OpportunityService {
     final user = _requireStudent();
     final opportunity = await getOpportunityById(id);
     if (opportunity == null ||
+        opportunity.status != OpportunityStatus.published ||
         opportunity.isClosed ||
         opportunity.deadline.isBefore(DateTime.now())) {
       return false;

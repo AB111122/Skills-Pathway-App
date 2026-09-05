@@ -10,8 +10,12 @@ class StudentApplicationsScreen extends ConsumerWidget {
   const StudentApplicationsScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final studentId =
-        ref.watch(authControllerProvider).currentUser?.id ?? 'usr_student_01';
+    final studentId = ref.watch(authControllerProvider).currentUser?.id;
+    if (studentId == null) {
+      return const Scaffold(
+        body: Center(child: Text('Please sign in to view your applications.')),
+      );
+    }
     return Scaffold(
       appBar: AppBar(title: const Text('My Applications')),
       body: FutureBuilder<List<ApplicationModel>>(

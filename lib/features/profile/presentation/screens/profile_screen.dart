@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/routing/route_names.dart';
@@ -23,22 +24,21 @@ class ProfileScreen extends ConsumerWidget {
     final studentProfile = authState.studentProfile;
     final orgProfile = authState.organizationProfile;
 
-    final displayName = studentProfile?.fullName ??
+    final displayName =
+        studentProfile?.fullName ??
         orgProfile?.orgName ??
         user?.name ??
-        'Fatima Zahra';
+        'Profile';
 
-    final email = user?.email ?? 'fatima.zahra@nust.edu.pk';
+    final email = user?.email ?? 'Email not available';
     final isOrg = user?.isOrganization ?? false;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor: isDark
+          ? AppColors.backgroundDark
+          : AppColors.backgroundLight,
       appBar: AppBar(
-        title: Text(
-          'My Profile',
-          style: AppTextStyles.titleLarge(context),
-        ),
+        title: Text('My Profile', style: AppTextStyles.titleLarge(context)),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -68,7 +68,9 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.2 : 0.03,
+                      ),
                       blurRadius: 10,
                       offset: const Offset(0, 2),
                     ),
@@ -130,7 +132,9 @@ class ProfileScreen extends ConsumerWidget {
                     StatBadge(
                       text: isOrg ? 'University / Provider' : 'Student Account',
                       style: StatBadgeStyle.primary,
-                      icon: isOrg ? Icons.business_rounded : Icons.school_rounded,
+                      icon: isOrg
+                          ? Icons.business_rounded
+                          : Icons.school_rounded,
                     ),
                   ],
                 ),
@@ -163,26 +167,15 @@ class ProfileScreen extends ConsumerWidget {
                         'Education Level',
                         studentProfile.educationLevel,
                       ),
-                      _buildDetailRow(
-                        context,
-                        'Degree',
-                        studentProfile.degree,
-                      ),
+                      _buildDetailRow(context, 'Degree', studentProfile.degree),
                       _buildDetailRow(
                         context,
                         'University',
                         studentProfile.universityOrCollege,
                       ),
-                      _buildDetailRow(
-                        context,
-                        'City',
-                        studentProfile.city,
-                      ),
+                      _buildDetailRow(context, 'City', studentProfile.city),
                       const SizedBox(height: 12),
-                      Text(
-                        'Skills',
-                        style: AppTextStyles.labelMedium(context),
-                      ),
+                      Text('Skills', style: AppTextStyles.labelMedium(context)),
                       const SizedBox(height: 8),
                       Wrap(
                         spacing: 6,
@@ -225,7 +218,9 @@ class ProfileScreen extends ConsumerWidget {
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('AI Career Roadmap is scheduled for Phase 6!'),
+                      content: Text(
+                        'AI Career Roadmap is scheduled for Phase 6!',
+                      ),
                     ),
                   );
                 },
@@ -239,7 +234,9 @@ class ProfileScreen extends ConsumerWidget {
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Market Fit & Resume parser ready in Phase 7!'),
+                      content: Text(
+                        'Market Fit & Resume parser ready in Phase 7!',
+                      ),
                     ),
                   );
                 },
@@ -314,7 +311,9 @@ class ProfileScreen extends ConsumerWidget {
           color: isDark ? AppColors.surfaceDark : Colors.white,
           borderRadius: AppDimensions.roundedMedium,
           border: Border.all(
-            color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+            color: isDark
+                ? AppColors.cardBorderDark
+                : AppColors.cardBorderLight,
           ),
         ),
         child: Row(
@@ -332,10 +331,7 @@ class ProfileScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: AppTextStyles.titleSmall(context),
-                  ),
+                  Text(title, style: AppTextStyles.titleSmall(context)),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,

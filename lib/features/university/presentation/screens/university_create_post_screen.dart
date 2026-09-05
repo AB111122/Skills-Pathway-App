@@ -20,13 +20,13 @@ class _UniversityCreatePostScreenState
   String? _category;
   bool _isSubmitting = false;
   final _categories = const [
+    'General',
     'Admissions',
     'Scholarships',
-    'Events',
     'Internships',
-    'Workshops',
-    'Announcements',
-    'News',
+    'Jobs',
+    'Events',
+    'Career Advice',
   ];
   @override
   void dispose() {

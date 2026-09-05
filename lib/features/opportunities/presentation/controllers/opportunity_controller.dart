@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../../models/opportunity_filter_model.dart';
 import '../../../../models/opportunity_model.dart';
@@ -38,9 +39,10 @@ class OpportunityController extends StateNotifier<OpportunityState> {
         errorMessage: null,
       );
     } catch (e) {
+      debugPrint('[OpportunityController] load opportunities failed: $e');
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Failed to load opportunities: ${e.toString()}',
+        errorMessage: 'Unable to load opportunities. Please try again.',
       );
     }
   }
@@ -81,9 +83,10 @@ class OpportunityController extends StateNotifier<OpportunityState> {
       state = state.copyWith(isLoading: false, selectedOpportunity: item);
       return item;
     } catch (e) {
+      debugPrint('[OpportunityController] load opportunity failed: $e');
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Could not load details: ${e.toString()}',
+        errorMessage: 'Unable to load opportunity details. Please try again.',
       );
       return null;
     }
@@ -114,28 +117,35 @@ class OpportunityController extends StateNotifier<OpportunityState> {
 
   /// Mark opportunity as applied after opening official website
   Future<void> markApplied(String id) async {
-    final applied = await _service.markAsApplied(id);
-    if (!applied) return;
+    try {
+      final applied = await _service.markAsApplied(id);
+      if (!applied) return;
 
-    final updatedList = state.opportunities.map((opp) {
-      if (opp.id == id) {
-        return opp.copyWith(isApplied: true, appliedAt: DateTime.now());
+      final updatedList = state.opportunities.map((opp) {
+        if (opp.id == id) {
+          return opp.copyWith(isApplied: true, appliedAt: DateTime.now());
+        }
+        return opp;
+      }).toList();
+
+      OpportunityModel? updatedSelected = state.selectedOpportunity;
+      if (updatedSelected?.id == id) {
+        updatedSelected = updatedSelected?.copyWith(
+          isApplied: true,
+          appliedAt: DateTime.now(),
+        );
       }
-      return opp;
-    }).toList();
 
-    OpportunityModel? updatedSelected = state.selectedOpportunity;
-    if (updatedSelected?.id == id) {
-      updatedSelected = updatedSelected?.copyWith(
-        isApplied: true,
-        appliedAt: DateTime.now(),
+      state = state.copyWith(
+        opportunities: updatedList,
+        selectedOpportunity: updatedSelected,
+      );
+    } catch (error) {
+      debugPrint('[OpportunityController] apply failed: $error');
+      state = state.copyWith(
+        errorMessage: 'Unable to submit application. Please try again.',
       );
     }
-
-    state = state.copyWith(
-      opportunities: updatedList,
-      selectedOpportunity: updatedSelected,
-    );
   }
 
   /// Toggle deadline reminder alert

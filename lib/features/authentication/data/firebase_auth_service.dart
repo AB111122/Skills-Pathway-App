@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../models/organization_model.dart';
 import '../../../models/student_profile_model.dart';
@@ -26,7 +27,11 @@ class FirebaseAuthService implements AuthService {
       }
       try {
         yield await _loadUser(firebaseUser);
-      } catch (_) {
+      } catch (error, stackTrace) {
+        debugPrint(
+          '[FirebaseAuthService] profile restore failed code=${error is FirebaseException ? error.code : 'unknown'} message=$error',
+        );
+        debugPrintStack(stackTrace: stackTrace);
         yield null;
       }
     }
@@ -188,7 +193,7 @@ class FirebaseAuthService implements AuthService {
 
   UserRole _roleFromValue(Object? value) => UserRole.values.firstWhere(
     (role) => role.name == value,
-    orElse: () => UserRole.student,
+    orElse: () => throw StateError('User profile has no valid role.'),
   );
 
   DateTime? _dateFromValue(Object? value) {
