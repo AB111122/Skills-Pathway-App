@@ -106,5 +106,36 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.followerId == request.auth.uid;
       allow update: if false;
     }
+
+    match /notifications/{notificationId} {
+      allow read: if signedIn()
+        && resource.data.recipientId == request.auth.uid;
+      allow update: if signedIn()
+        && resource.data.recipientId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+      allow delete: if signedIn()
+        && resource.data.recipientId == request.auth.uid;
+      allow create: if (isUniversity()
+        && request.resource.data.type == 'application'
+        && request.resource.data.applicationId != null
+        && exists(/databases/$(database)/documents/applications/$(request.resource.data.applicationId))
+        && get(/databases/$(database)/documents/applications/$(request.resource.data.applicationId)).data.organizationId == request.auth.uid
+        && request.resource.data.recipientId == get(/databases/$(database)/documents/applications/$(request.resource.data.applicationId)).data.studentId)
+        || (isUniversity()
+          && request.resource.data.type == 'opportunity'
+          && request.resource.data.postId != null
+          && exists(/databases/$(database)/documents/posts/$(request.resource.data.postId))
+          && get(/databases/$(database)/documents/posts/$(request.resource.data.postId)).data.authorId == request.auth.uid
+          && get(/databases/$(database)/documents/posts/$(request.resource.data.postId)).data.authorType == 'university'
+          && request.resource.data.recipientId != request.auth.uid
+          && exists(/databases/$(database)/documents/follows/$(request.resource.data.recipientId + '_' + get(/databases/$(database)/documents/posts/$(request.resource.data.postId)).data.authorId)))
+        || (signedIn()
+          && request.resource.data.type == 'deadline'
+          && request.resource.data.recipientId == request.auth.uid
+          && request.resource.data.opportunityId != null
+          && exists(/databases/$(database)/documents/opportunities/$(request.resource.data.opportunityId))
+          && get(/databases/$(database)/documents/opportunities/$(request.resource.data.opportunityId)).data.status == 'published'
+          && get(/databases/$(database)/documents/opportunities/$(request.resource.data.opportunityId)).data.deadline > request.time);
+    }
   }
 }

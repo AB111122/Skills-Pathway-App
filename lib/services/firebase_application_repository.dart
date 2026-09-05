@@ -2,8 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/application_model.dart';
+import '../models/notification_model.dart';
 import 'application_repository.dart';
 import 'firestore_serializers.dart';
+import 'notification_service.dart';
 
 class FirebaseApplicationRepository implements ApplicationRepository {
   FirebaseApplicationRepository({
@@ -92,6 +94,14 @@ class FirebaseApplicationRepository implements ApplicationRepository {
       'status': status.name,
       'updatedAt': FieldValue.serverTimestamp(),
     });
+    await NotificationService().createForUser(
+      recipientId: application.studentId,
+      title: 'Application status updated',
+      message: '${application.opportunityTitle}: ${status.name}',
+      type: NotificationType.application,
+      opportunityId: application.opportunityId,
+      applicationId: application.id,
+    );
     return application.copyWith(status: status);
   }
 

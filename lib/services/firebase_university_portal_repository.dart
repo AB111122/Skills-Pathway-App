@@ -49,6 +49,9 @@ class FirebaseUniversityPortalRepository implements UniversityPortalRepository {
     deadline: deadline,
     location: location,
     applicationUrl: applicationUrl,
+    category: category,
+    eligibility: eligibility,
+    contactEmail: contactEmail,
   );
 
   @override

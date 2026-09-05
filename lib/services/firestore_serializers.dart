@@ -118,13 +118,13 @@ class FirestoreSerializers {
       topic: data['topic'] as String? ?? 'General',
       createdAt: date(data['createdAt']),
       updatedAt: date(data['updatedAt']),
-      likesCount: data['likesCount'] as int? ?? 0,
-      commentsCount: data['commentsCount'] as int? ?? 0,
+      likesCount: (data['likesCount'] as num?)?.toInt() ?? 0,
+      commentsCount: (data['commentsCount'] as num?)?.toInt() ?? 0,
       status: PostStatus.values.firstWhere(
         (value) => value.name == data['status'],
         orElse: () => PostStatus.approved,
       ),
-      reportCount: data['reportCount'] as int? ?? 0,
+      reportCount: (data['reportCount'] as num?)?.toInt() ?? 0,
     );
   }
 }

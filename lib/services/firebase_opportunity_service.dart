@@ -179,6 +179,9 @@ class FirebaseOpportunityService implements OpportunityService {
     required DateTime deadline,
     required String location,
     required String applicationUrl,
+    String category = 'General',
+    String eligibility = '',
+    String contactEmail = '',
   }) async {
     _requireOrganization(organizationId);
     final reference = _opportunities.doc();
@@ -191,6 +194,7 @@ class FirebaseOpportunityService implements OpportunityService {
       type: type,
       location: location,
       deadline: deadline,
+      category: category,
       isVerified: false,
       isPaid: type == OpportunityType.internship,
       stipendOrFunding: 'See opportunity details',
@@ -199,9 +203,15 @@ class FirebaseOpportunityService implements OpportunityService {
       officialUrl: applicationUrl,
       requiredSkills: const [],
       eligibleFields: const [],
+      eligibilityCriteria: eligibility.isEmpty ? const [] : [eligibility],
+      status: OpportunityStatus.published,
       createdAt: DateTime.now(),
     );
-    await reference.set({..._toFirestore(item), 'applicationCount': 0});
+    await reference.set({
+      ..._toFirestore(item),
+      'contactEmail': contactEmail,
+      'applicationCount': 0,
+    });
     return item;
   }
 

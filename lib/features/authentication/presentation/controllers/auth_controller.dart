@@ -19,12 +19,14 @@ final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
 
 class AuthController extends StateNotifier<AuthState> {
   final AuthService _authService;
+  int _sessionVersion = 0;
 
   AuthController(this._authService) : super(AuthState.loading()) {
     _authService.authStateChanges.listen(_restoreSession);
   }
 
   Future<void> _restoreSession(UserModel? user) async {
+    final sessionVersion = ++_sessionVersion;
     if (user == null) {
       state = const AuthState();
       return;
@@ -41,6 +43,8 @@ class AuthController extends StateNotifier<AuthState> {
     final organizationProfile = await _authService.getOrganizationProfile(
       user.id,
     );
+
+    if (sessionVersion != _sessionVersion) return;
 
     state = state.copyWith(
       isLoading: false,
@@ -185,6 +189,7 @@ class AuthController extends StateNotifier<AuthState> {
 
   /// Logout
   Future<void> logout() async {
+    _sessionVersion++;
     await _authService.logout();
     state = const AuthState();
   }

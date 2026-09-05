@@ -215,15 +215,11 @@ class ProfileScreen extends ConsumerWidget {
                 icon: Icons.auto_awesome_outlined,
                 title: 'Career Roadmap & Insights',
                 subtitle: 'Personalized learning steps and skill gaps',
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'AI Career Roadmap is scheduled for Phase 6!',
-                      ),
-                    ),
-                  );
-                },
+                onTap: () => context.push(
+                  '/chatbot/conversation',
+                  extra:
+                      'Build a career roadmap based on my profile and skills.',
+                ),
               ),
               const SizedBox(height: 8),
               _buildActionTile(
@@ -231,15 +227,10 @@ class ProfileScreen extends ConsumerWidget {
                 icon: Icons.description_outlined,
                 title: 'Resume & Market Fit Analysis',
                 subtitle: 'Resume upload & benchmark against listings',
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Market Fit & Resume parser ready in Phase 7!',
-                      ),
-                    ),
-                  );
-                },
+                onTap: () => context.push(
+                  '/chatbot/conversation',
+                  extra: 'Help me improve my resume and understand market fit.',
+                ),
               ),
               const SizedBox(height: 24),
 

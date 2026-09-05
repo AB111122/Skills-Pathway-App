@@ -3,6 +3,8 @@ enum NotificationType { deadline, application, opportunity }
 class NotificationModel {
   final String id;
   final String? opportunityId;
+  final String? applicationId;
+  final String? postId;
   final String title;
   final String message;
   final DateTime createdAt;
@@ -12,6 +14,8 @@ class NotificationModel {
   const NotificationModel({
     required this.id,
     this.opportunityId,
+    this.applicationId,
+    this.postId,
     required this.title,
     required this.message,
     required this.createdAt,
@@ -20,28 +24,35 @@ class NotificationModel {
   });
 
   NotificationModel copyWith({bool? isRead}) => NotificationModel(
-        id: id,
-        opportunityId: opportunityId,
-        title: title,
-        message: message,
-        createdAt: createdAt,
-        type: type,
-        isRead: isRead ?? this.isRead,
-      );
+    id: id,
+    opportunityId: opportunityId,
+    applicationId: applicationId,
+    postId: postId,
+    title: title,
+    message: message,
+    createdAt: createdAt,
+    type: type,
+    isRead: isRead ?? this.isRead,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'opportunityId': opportunityId,
-        'title': title,
-        'message': message,
-        'createdAt': createdAt.toIso8601String(),
-        'type': type.name,
-        'isRead': isRead,
-      };
+    'id': id,
+    'opportunityId': opportunityId,
+    'applicationId': applicationId,
+    'postId': postId,
+    'title': title,
+    'message': message,
+    'createdAt': createdAt.toIso8601String(),
+    'type': type.name,
+    'isRead': isRead,
+  };
 
-  factory NotificationModel.fromJson(Map<String, dynamic> json) => NotificationModel(
+  factory NotificationModel.fromJson(Map<String, dynamic> json) =>
+      NotificationModel(
         id: json['id'] as String,
         opportunityId: json['opportunityId'] as String?,
+        applicationId: json['applicationId'] as String?,
+        postId: json['postId'] as String?,
         title: json['title'] as String,
         message: json['message'] as String,
         createdAt: DateTime.parse(json['createdAt'] as String),

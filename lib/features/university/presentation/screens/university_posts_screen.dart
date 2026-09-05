@@ -36,8 +36,26 @@ class _UniversityPostsScreenState extends ConsumerState<UniversityPostsScreen> {
     body: FutureBuilder<List<PostModel>>(
       future: _posts,
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(AppDimensions.p20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Unable to load official posts.'),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: () => setState(_reload),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          );
         }
         final posts = snapshot.data!;
         final organizationId =

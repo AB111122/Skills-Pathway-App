@@ -6,6 +6,8 @@ import '../models/comment_model.dart';
 import '../models/post_model.dart';
 import 'community_repository.dart';
 import 'firestore_serializers.dart';
+import '../models/notification_model.dart';
+import 'notification_service.dart';
 
 class FirebaseCommunityRepository implements CommunityRepository {
   FirebaseCommunityRepository({
@@ -102,6 +104,21 @@ class FirebaseCommunityRepository implements CommunityRepository {
       'status': PostStatus.approved.name,
       'reportCount': 0,
     });
+    final followers = await _firestore
+        .collection('follows')
+        .where('authorId', isEqualTo: user.uid)
+        .get();
+    for (final follower in followers.docs) {
+      final recipientId = follower.data()['followerId'] as String?;
+      if (recipientId == null || recipientId == user.uid) continue;
+      await NotificationService().createForUser(
+        recipientId: recipientId,
+        title: 'New post from $universityName',
+        message: title,
+        type: NotificationType.opportunity,
+        postId: reference.id,
+      );
+    }
     return _fromSnapshot(await reference.get());
   }
 

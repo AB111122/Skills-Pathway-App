@@ -709,6 +709,9 @@ class MockOpportunityService implements OpportunityService {
     required DateTime deadline,
     required String location,
     required String applicationUrl,
+    String category = 'General',
+    String eligibility = '',
+    String contactEmail = '',
   }) async {
     final item = OpportunityModel(
       id: 'university-${DateTime.now().microsecondsSinceEpoch}',
@@ -719,6 +722,7 @@ class MockOpportunityService implements OpportunityService {
       type: type,
       location: location,
       deadline: deadline,
+      category: category,
       isVerified: false,
       isPaid: type == OpportunityType.internship,
       stipendOrFunding: 'See opportunity details',
@@ -727,6 +731,7 @@ class MockOpportunityService implements OpportunityService {
       officialUrl: applicationUrl,
       requiredSkills: const [],
       eligibleFields: const [],
+      eligibilityCriteria: eligibility.isEmpty ? const [] : [eligibility],
       createdAt: DateTime.now(),
     );
     _mockDatabase.insert(0, item);

@@ -6,8 +6,27 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/theme/text_styles.dart';
 
 /// AI Chatbot Home & Assistant Screen (Phase 5)
-class ChatbotHomeScreen extends StatelessWidget {
+class ChatbotHomeScreen extends StatefulWidget {
   const ChatbotHomeScreen({super.key});
+
+  @override
+  State<ChatbotHomeScreen> createState() => _ChatbotHomeScreenState();
+}
+
+class _ChatbotHomeScreenState extends State<ChatbotHomeScreen> {
+  final _input = TextEditingController();
+
+  @override
+  void dispose() {
+    _input.dispose();
+    super.dispose();
+  }
+
+  void _openConversation() {
+    final prompt = _input.text.trim();
+    if (prompt.isEmpty) return;
+    context.push('/chatbot/conversation', extra: prompt);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -186,11 +205,14 @@ class ChatbotHomeScreen extends StatelessWidget {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        'Ask about scholarships, career roadmaps, or jobs...',
-                        style: AppTextStyles.bodyMedium(
-                          context,
-                          color: AppColors.textMutedLight,
+                      child: TextField(
+                        controller: _input,
+                        onSubmitted: (_) => _openConversation(),
+                        textInputAction: TextInputAction.send,
+                        decoration: const InputDecoration(
+                          hintText: 'Ask about scholarships, career roadmaps, or jobs...',
+                          border: InputBorder.none,
+                          isDense: true,
                         ),
                       ),
                     ),
@@ -199,15 +221,7 @@ class ChatbotHomeScreen extends StatelessWidget {
                         Icons.send_rounded,
                         color: AppColors.primary,
                       ),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'AI conversational streaming & profile context integration is scheduled for Phase 5.',
-                            ),
-                          ),
-                        );
-                      },
+                      onPressed: _openConversation,
                     ),
                   ],
                 ),

@@ -1,6 +1,11 @@
 import 'dart:convert';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+
 import '../models/alert_model.dart';
 
 class AlertRepository {
@@ -9,7 +14,18 @@ class AlertRepository {
 
   AlertRepository({Uuid? uuid}) : _uuid = uuid ?? const Uuid();
 
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
+  FirebaseAuth get _auth => FirebaseAuth.instance;
+
   Future<List<AlertModel>> getAlerts() async {
+    if (Firebase.apps.isNotEmpty && _auth.currentUser != null) {
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(_auth.currentUser!.uid)
+          .collection('deadlineReminders')
+          .get();
+      return snapshot.docs.map(_fromFirestore).toList();
+    }
     List<String> values;
     try {
       final preferences = await SharedPreferences.getInstance().timeout(
@@ -20,7 +36,10 @@ class AlertRepository {
       values = [];
     }
     return values
-        .map((value) => AlertModel.fromJson(jsonDecode(value) as Map<String, dynamic>))
+        .map(
+          (value) =>
+              AlertModel.fromJson(jsonDecode(value) as Map<String, dynamic>),
+        )
         .toList();
   }
 
@@ -37,16 +56,56 @@ class AlertRepository {
     required DateTime deadline,
     required ReminderType reminderType,
   }) async {
-    final reminderDate = deadline.subtract(Duration(days: reminderType == ReminderType.oneDay ? 1 : reminderType == ReminderType.threeDays ? 3 : 7));
-    if (!deadline.isAfter(DateTime.now()) || !reminderDate.isAfter(DateTime.now())) {
+    final reminderDate = deadline.subtract(
+      Duration(
+        days: reminderType == ReminderType.oneDay
+            ? 1
+            : reminderType == ReminderType.threeDays
+            ? 3
+            : 7,
+      ),
+    );
+    if (!deadline.isAfter(DateTime.now()) ||
+        !reminderDate.isAfter(DateTime.now())) {
       throw StateError('This reminder date is no longer available.');
+    }
+    if (Firebase.apps.isNotEmpty && _auth.currentUser != null) {
+      final alerts = await _firestore
+          .collection('users')
+          .doc(_auth.currentUser!.uid)
+          .collection('deadlineReminders')
+          .get();
+      for (final item in alerts.docs) {
+        if (item.data()['opportunityId'] == opportunityId) {
+          await item.reference.delete();
+        }
+      }
+      final alert = AlertModel(
+        id: _uuid.v4(),
+        opportunityId: opportunityId,
+        userId: _auth.currentUser!.uid,
+        deadline: deadline,
+        reminderDate: reminderDate,
+        reminderType: reminderType,
+      );
+      await _firestore
+          .collection('users')
+          .doc(_auth.currentUser!.uid)
+          .collection('deadlineReminders')
+          .doc(alert.id)
+          .set({
+            ...alert.toJson(),
+            'deadline': Timestamp.fromDate(deadline),
+            'reminderDate': Timestamp.fromDate(reminderDate),
+          });
+      return alert;
     }
     final alerts = await getAlerts();
     alerts.removeWhere((alert) => alert.opportunityId == opportunityId);
     final alert = AlertModel(
       id: _uuid.v4(),
       opportunityId: opportunityId,
-      userId: 'local-user',
+      userId: _auth.currentUser?.uid ?? 'local-user',
       deadline: deadline,
       reminderDate: reminderDate,
       reminderType: reminderType,
@@ -57,6 +116,19 @@ class AlertRepository {
   }
 
   Future<void> cancel(String opportunityId) async {
+    if (Firebase.apps.isNotEmpty && _auth.currentUser != null) {
+      final alerts = await _firestore
+          .collection('users')
+          .doc(_auth.currentUser!.uid)
+          .collection('deadlineReminders')
+          .get();
+      for (final item in alerts.docs) {
+        if (item.data()['opportunityId'] == opportunityId) {
+          await item.reference.delete();
+        }
+      }
+      return;
+    }
     final alerts = await getAlerts();
     alerts.removeWhere((alert) => alert.opportunityId == opportunityId);
     await _write(alerts);
@@ -70,5 +142,23 @@ class AlertRepository {
         alerts.map((alert) => jsonEncode(alert.toJson())).toList(),
       );
     } catch (_) {}
+  }
+
+  AlertModel _fromFirestore(DocumentSnapshot<Map<String, dynamic>> snapshot) {
+    final data = snapshot.data() ?? {};
+    DateTime readDate(Object? value) =>
+        value is Timestamp ? value.toDate() : DateTime.parse(value as String);
+    return AlertModel(
+      id: snapshot.id,
+      opportunityId: data['opportunityId'] as String,
+      userId: data['userId'] as String,
+      deadline: readDate(data['deadline']),
+      reminderDate: readDate(data['reminderDate']),
+      reminderType: ReminderType.values.firstWhere(
+        (value) => value.name == data['reminderType'],
+        orElse: () => ReminderType.oneDay,
+      ),
+      isEnabled: data['isEnabled'] as bool? ?? true,
+    );
   }
 }
