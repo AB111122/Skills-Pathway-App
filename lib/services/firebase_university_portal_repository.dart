@@ -116,6 +116,7 @@ class FirebaseUniversityPortalRepository implements UniversityPortalRepository {
       const <PostModel>[],
     );
     return UniversityStats(
+      totalOpportunities: owned.length,
       activeOpportunities: owned
           .where(
             (item) =>

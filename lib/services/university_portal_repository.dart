@@ -6,12 +6,14 @@ import 'community_repository.dart';
 import 'mock_opportunity_service.dart';
 
 class UniversityStats {
+  final int totalOpportunities;
   final int activeOpportunities;
   final int totalApplications;
   final int pendingApplications;
   final int publishedPosts;
   final int engagement;
   const UniversityStats({
+    this.totalOpportunities = 0,
     required this.activeOpportunities,
     required this.totalApplications,
     required this.pendingApplications,
@@ -124,6 +126,7 @@ class MockUniversityPortalRepository implements UniversityPortalRepository {
       );
     }
     return UniversityStats(
+      totalOpportunities: owned.length,
       activeOpportunities: owned
           .where(
             (item) =>

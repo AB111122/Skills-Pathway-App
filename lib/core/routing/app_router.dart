@@ -72,20 +72,29 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (_, state) {
       final auth = ref.read(authControllerProvider);
       final path = state.uri.path;
-      final isLoading = auth.isLoading;
-      final publicPaths = {
-        RouteNames.splash,
-        RouteNames.onboarding,
-        RouteNames.roleSelection,
+      if (auth.isLoading) return null;
+
+      final authPaths = {
         RouteNames.login,
+        RouteNames.roleSelection,
+        RouteNames.onboarding,
         RouteNames.registerStudent,
         RouteNames.registerOrganization,
         RouteNames.forgotPassword,
       };
 
-      if (isLoading) return null;
-      if (!auth.isAuthenticated && !publicPaths.contains(path)) {
+      if (!auth.isAuthenticated) {
+        if (path == RouteNames.splash || authPaths.contains(path)) {
+          return null;
+        }
         return RouteNames.login;
+      }
+
+      // Authenticated users
+      if (path == RouteNames.splash || authPaths.contains(path)) {
+        return auth.isOrganization
+            ? RouteNames.universityDashboard
+            : RouteNames.home;
       }
 
       final isUniversityRoute = path.startsWith('/university/');

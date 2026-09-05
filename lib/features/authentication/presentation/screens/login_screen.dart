@@ -32,12 +32,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void initState() {
     super.initState();
     _currentRole = widget.initialRole;
-    _emailController = TextEditingController(
-      text: _currentRole == UserRole.student
-          ? 'fatima.zahra@nust.edu.pk'
-          : 'admissions@nust.edu.pk',
-    );
-    _passwordController = TextEditingController(text: 'Password123');
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
   }
 
   @override
@@ -50,10 +46,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void _onRoleChanged(UserRole role) {
     setState(() {
       _currentRole = role;
-      if (role == UserRole.student) {
+    });
+  }
+
+  void _fillDemoCredentials() {
+    setState(() {
+      if (_currentRole == UserRole.student) {
         _emailController.text = 'fatima.zahra@nust.edu.pk';
+        _passwordController.text = 'Password123';
       } else {
         _emailController.text = 'admissions@nust.edu.pk';
+        _passwordController.text = 'Password123';
       }
     });
   }
@@ -318,37 +321,41 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 16),
 
                 // Quick Demo Auto-fill Helper
-                Container(
-                  padding: const EdgeInsets.all(AppDimensions.p12),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryMint.withValues(alpha: 0.08),
-                    borderRadius: AppDimensions.roundedMedium,
-                    border: Border.all(
-                      color: AppColors.primaryMint.withValues(alpha: 0.25),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.bolt_rounded,
-                        color: AppColors.primary,
-                        size: 20,
+                InkWell(
+                  onTap: _fillDemoCredentials,
+                  borderRadius: AppDimensions.roundedMedium,
+                  child: Container(
+                    padding: const EdgeInsets.all(AppDimensions.p12),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryMint.withValues(alpha: 0.08),
+                      borderRadius: AppDimensions.roundedMedium,
+                      border: Border.all(
+                        color: AppColors.primaryMint.withValues(alpha: 0.25),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _currentRole == UserRole.student
-                              ? 'Demo Student account pre-loaded (Fatima Zahra, NUST)'
-                              : 'Demo Org account pre-loaded (NUST Admissions)',
-                          style: AppTextStyles.labelSmall(
-                            context,
-                            color: isDark
-                                ? AppColors.primaryMint
-                                : AppColors.primaryDark,
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.bolt_rounded,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _currentRole == UserRole.student
+                                ? 'Tap to auto-fill demo Student credentials'
+                                : 'Tap to auto-fill demo University credentials',
+                            style: AppTextStyles.labelSmall(
+                              context,
+                              color: isDark
+                                  ? AppColors.primaryMint
+                                  : AppColors.primaryDark,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),

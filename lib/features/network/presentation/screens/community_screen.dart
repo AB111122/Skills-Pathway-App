@@ -21,13 +21,13 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
   String? _topic;
   int _tab = 0;
   final _topics = const [
-    'General',
-    'Admissions',
     'All topics',
-    'Scholarships',
-    'Internships',
+    'Admissions',
     'Jobs',
     'Events',
+    'General',
+    'Scholarships',
+    'Internships',
     'Career Advice',
     'University',
     'Technology',
@@ -267,16 +267,16 @@ class _PostCard extends ConsumerWidget {
                         final confirmed = await showDialog<bool>(
                           context: context,
                           builder: (_) => AlertDialog(
-                            title: const Text('Delete this post?'),
+                            title: const Text('Delete post?'),
                             content: const Text(
-                              'This action cannot be undone.',
+                              'Are you sure you want to delete this post?',
                             ),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context, false),
                                 child: const Text('Cancel'),
                               ),
-                              TextButton(
+                              FilledButton(
                                 onPressed: () => Navigator.pop(context, true),
                                 child: const Text('Delete'),
                               ),

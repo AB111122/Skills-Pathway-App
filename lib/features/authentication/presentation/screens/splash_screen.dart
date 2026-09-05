@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/routing/route_names.dart';
 import '../../../../core/theme/text_styles.dart';
+import '../controllers/auth_controller.dart';
 
 /// Animated Splash Screen with brand logo and smooth entry transition.
 class SplashScreen extends ConsumerStatefulWidget {
@@ -42,10 +43,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     _animController.forward();
 
-    // Navigate to Onboarding after brief splash animation
+    // Navigate after brief splash animation
     Future.delayed(const Duration(milliseconds: 2400), () {
       if (mounted) {
-        context.go(RouteNames.onboarding);
+        final auth = ref.read(authControllerProvider);
+        if (auth.isAuthenticated) {
+          context.go(
+            auth.isOrganization
+                ? RouteNames.universityDashboard
+                : RouteNames.home,
+          );
+        } else {
+          context.go(RouteNames.onboarding);
+        }
       }
     });
   }

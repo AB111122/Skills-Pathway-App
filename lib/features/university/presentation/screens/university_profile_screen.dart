@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/routing/route_names.dart';
+import '../../../../core/theme/text_styles.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/verified_badge.dart';
 import '../../../authentication/presentation/controllers/auth_controller.dart';
@@ -14,51 +16,74 @@ import '../../../../services/university_portal_repository.dart';
 class UniversityProfileScreen extends ConsumerWidget {
   const UniversityProfileScreen({super.key});
 
+  Future<void> _logout(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sign out?'),
+        content: const Text(
+          'Are you sure you want to sign out of the university portal?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Sign Out'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await ref.read(authControllerProvider.notifier).logout();
+      if (context.mounted) {
+        context.go(RouteNames.login);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authControllerProvider);
     final profile = auth.organizationProfile;
-    final name = profile?.orgName ?? auth.currentUser?.name ?? 'University';
+    final name = profile?.orgName.isNotEmpty == true
+        ? profile!.orgName
+        : (auth.currentUser?.name.isNotEmpty == true
+            ? auth.currentUser!.name
+            : 'University Profile');
     final organizationId = auth.currentUser?.id;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final initial = name.isNotEmpty ? name.substring(0, 1).toUpperCase() : 'U';
 
     return Scaffold(
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       appBar: AppBar(
-        title: const Text('University Profile'),
+        title: Text(
+          'University Profile',
+          style: AppTextStyles.titleLarge(context),
+        ),
         actions: [
           IconButton(
-            tooltip: 'Logout',
+            tooltip: 'Sign Out',
             icon: const Icon(Icons.logout_rounded),
-            onPressed: () async {
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (_) => AlertDialog(
-                  title: const Text('Log out?'),
-                  content: const Text('Are you sure you want to log out?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Logout'),
-                    ),
-                  ],
-                ),
-              );
-
-              if (confirmed == true) {
-                await ref.read(authControllerProvider.notifier).logout();
-                if (context.mounted) {
-                  context.go(RouteNames.login);
-                }
-              }
-            },
+            onPressed: () => _logout(context, ref),
           ),
         ],
       ),
       body: organizationId == null
-          ? const Center(child: Text('Please sign in to view your profile.'))
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppDimensions.p24),
+                child: Text(
+                  'Please sign in to view your profile.',
+                  style: AppTextStyles.bodyMedium(context),
+                ),
+              ),
+            )
           : FutureBuilder<UniversityStats>(
               future: ref
                   .read(universityRepositoryProvider)
@@ -68,129 +93,269 @@ class UniversityProfileScreen extends ConsumerWidget {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  return const Center(
-                    child: Text('Unable to load profile data.'),
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppDimensions.p24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.error_outline_rounded,
+                            size: 44,
+                            color: AppColors.error,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Unable to load profile data.',
+                            style: AppTextStyles.titleMedium(context),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            snapshot.error is FirebaseException
+                                ? (snapshot.error as FirebaseException).message ??
+                                    'Firebase error'
+                                : 'Please try again later.',
+                            textAlign: TextAlign.center,
+                            style: AppTextStyles.bodySmall(context),
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 }
+
                 final stats =
                     snapshot.data ??
                     const UniversityStats(
+                      totalOpportunities: 0,
                       activeOpportunities: 0,
                       totalApplications: 0,
                       pendingApplications: 0,
                       publishedPosts: 0,
                       engagement: 0,
                     );
-                final initial = name.isEmpty
-                    ? 'U'
-                    : name.substring(0, 1).toUpperCase();
+
+                final oppCount = stats.totalOpportunities > 0
+                    ? stats.totalOpportunities
+                    : stats.activeOpportunities;
+
                 return ListView(
                   padding: const EdgeInsets.all(AppDimensions.p20),
                   children: [
+                    // Profile Header Card
                     Container(
                       padding: const EdgeInsets.all(AppDimensions.p20),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(20),
+                        gradient: LinearGradient(
+                          colors: isDark
+                              ? [
+                                  AppColors.surfaceDark,
+                                  AppColors.primaryDark.withValues(alpha: 0.5),
+                                ]
+                              : [
+                                  Colors.white,
+                                  AppColors.primary.withValues(alpha: 0.06),
+                                ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: AppDimensions.roundedLarge,
+                        border: Border.all(
+                          color: isDark
+                              ? AppColors.cardBorderDark
+                              : AppColors.cardBorderLight,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(
+                              alpha: isDark ? 0.2 : 0.04,
+                            ),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      child: Row(
+                      child: Column(
                         children: [
-                          CircleAvatar(
-                            radius: 34,
-                            backgroundColor: AppColors.primary,
-                            child: Text(
-                              initial,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 28,
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: AppColors.primaryGradient,
+                            ),
+                            child: Center(
+                              child: Text(
+                                initial,
+                                style: AppTextStyles.displayMedium(
+                                  context,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
+                          const SizedBox(height: 14),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Flexible(
+                                child: Text(
                                   name,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineSmall,
+                                  textAlign: TextAlign.center,
+                                  style: AppTextStyles.titleLarge(context),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  profile?.orgType ??
-                                      'University / Higher Education',
-                                ),
-                                if (profile?.isVerified == true)
-                                  const Padding(
-                                    padding: EdgeInsets.only(top: 8),
-                                    child: VerifiedBadge(isVerified: true),
-                                  ),
+                              ),
+                              if (profile?.isVerified == true) ...[
+                                const SizedBox(width: 6),
+                                const VerifiedBadge(isVerified: true),
                               ],
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            profile?.orgType ?? 'University / Higher Education',
+                            style: AppTextStyles.bodyMedium(
+                              context,
+                              color: isDark
+                                  ? AppColors.textMutedDark
+                                  : AppColors.textSecondaryLight,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    _InfoSection(
-                      title: 'Organization Details',
-                      children: [
-                        _InfoRow(
-                          icon: Icons.email_outlined,
-                          label:
-                              profile?.officialEmail ??
-                              auth.currentUser?.email ??
-                              'Email not provided',
+                    const SizedBox(height: 20),
+
+                    // Organization Details Card
+                    Container(
+                      padding: const EdgeInsets.all(AppDimensions.p16),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.surfaceDark : Colors.white,
+                        borderRadius: AppDimensions.roundedLarge,
+                        border: Border.all(
+                          color: isDark
+                              ? AppColors.cardBorderDark
+                              : AppColors.cardBorderLight,
                         ),
-                        _InfoRow(
-                          icon: Icons.location_on_outlined,
-                          label: profile?.city ?? 'Location not provided',
-                        ),
-                        _InfoRow(
-                          icon: Icons.language_outlined,
-                          label: profile?.website ?? 'Website not provided',
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: [
-                        _Metric(
-                          label: 'Active opportunities',
-                          value: '${stats.activeOpportunities}',
-                        ),
-                        _Metric(
-                          label: 'Applications',
-                          value: '${stats.totalApplications}',
-                        ),
-                        _Metric(
-                          label: 'Published posts',
-                          value: '${stats.publishedPosts}',
-                        ),
-                      ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'About & Contact',
+                            style: AppTextStyles.titleSmall(context),
+                          ),
+                          const SizedBox(height: 12),
+                          _DetailRow(
+                            icon: Icons.email_outlined,
+                            label: 'Official Email',
+                            value: profile?.officialEmail.isNotEmpty == true
+                                ? profile!.officialEmail
+                                : (auth.currentUser?.email.isNotEmpty == true
+                                    ? auth.currentUser!.email
+                                    : 'Not provided'),
+                          ),
+                          _DetailRow(
+                            icon: Icons.location_on_outlined,
+                            label: 'Location / City',
+                            value: profile?.city?.isNotEmpty == true
+                                ? profile!.city!
+                                : 'Not specified',
+                          ),
+                          _DetailRow(
+                            icon: Icons.language_outlined,
+                            label: 'Website',
+                            value: profile?.website.isNotEmpty == true
+                                ? profile!.website
+                                : 'Not specified',
+                          ),
+                          if (profile?.registrationNumber?.isNotEmpty == true)
+                            _DetailRow(
+                              icon: Icons.badge_outlined,
+                              label: 'Registration / Reg No.',
+                              value: profile!.registrationNumber!,
+                            ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 20),
+
+                    // Statistics Grid
                     Text(
-                      'Quick Actions',
-                      style: Theme.of(context).textTheme.titleMedium,
+                      'Activity & Statistics',
+                      style: AppTextStyles.titleMedium(context),
+                    ),
+                    const SizedBox(height: 12),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isWide = constraints.maxWidth > 600;
+                        return GridView.count(
+                          crossAxisCount: isWide ? 3 : 3,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          childAspectRatio: isWide ? 1.4 : 1.05,
+                          children: [
+                            _StatBox(
+                              label: 'Opportunities',
+                              value: '$oppCount',
+                              icon: Icons.work_outline_rounded,
+                              color: AppColors.primaryMint,
+                            ),
+                            _StatBox(
+                              label: 'Applications',
+                              value: '${stats.totalApplications}',
+                              icon: Icons.assignment_outlined,
+                              color: AppColors.secondary,
+                            ),
+                            _StatBox(
+                              label: 'Posts',
+                              value: '${stats.publishedPosts}',
+                              icon: Icons.campaign_outlined,
+                              color: AppColors.primary,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Quick Actions
+                    Text(
+                      'Actions',
+                      style: AppTextStyles.titleMedium(context),
+                    ),
+                    const SizedBox(height: 12),
+                    CustomButton(
+                      text: 'Create Opportunity',
+                      icon: Icons.add_business_rounded,
+                      onPressed: () =>
+                          context.push('/university/opportunities/create'),
                     ),
                     const SizedBox(height: 10),
                     CustomButton(
                       text: 'Manage Opportunities',
-                      icon: Icons.work_outline,
+                      icon: Icons.list_alt_rounded,
+                      variant: ButtonVariant.outline,
                       onPressed: () =>
                           context.go(RouteNames.universityOpportunities),
                     ),
                     const SizedBox(height: 10),
                     CustomButton(
-                      text: 'Community & Admissions',
-                      icon: Icons.campaign_outlined,
+                      text: 'Create Community / Admissions Post',
+                      icon: Icons.campaign_rounded,
                       variant: ButtonVariant.outline,
-                      onPressed: () => context.go(RouteNames.universityPosts),
+                      onPressed: () =>
+                          context.push('/university/posts/create'),
+                    ),
+                    const SizedBox(height: 10),
+                    CustomButton(
+                      text: 'View Applications',
+                      icon: Icons.people_outline_rounded,
+                      variant: ButtonVariant.outline,
+                      onPressed: () =>
+                          context.go(RouteNames.universityApplications),
                     ),
                     const SizedBox(height: 10),
                     CustomButton(
@@ -199,92 +364,117 @@ class UniversityProfileScreen extends ConsumerWidget {
                       variant: ButtonVariant.outline,
                       onPressed: () => _logout(context, ref),
                     ),
+                    const SizedBox(height: 24),
                   ],
                 );
               },
             ),
     );
   }
+}
 
-  Future<void> _logout(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+class _DetailRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _DetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: AppColors.primary),
+          const SizedBox(width: 10),
+          Text(
+            '$label: ',
+            style: AppTextStyles.bodySmall(
+              context,
+              color: isDark
+                  ? AppColors.textMutedDark
+                  : AppColors.textSecondaryLight,
+            ),
           ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Logout'),
+          Expanded(
+            child: Text(
+              value,
+              style: AppTextStyles.labelMedium(context),
+            ),
           ),
         ],
       ),
     );
-    if (confirmed == true) {
-      await ref.read(authControllerProvider.notifier).logout();
-      if (context.mounted) context.go(RouteNames.login);
-    }
   }
 }
 
-class _InfoSection extends StatelessWidget {
-  final String title;
-  final List<Widget> children;
-  const _InfoSection({required this.title, required this.children});
-  @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(AppDimensions.p16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 10),
-          ...children,
-        ],
-      ),
-    ),
-  );
-}
-
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _InfoRow({required this.icon, required this.label});
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Row(
-      children: [
-        Icon(icon, size: 18),
-        const SizedBox(width: 8),
-        Expanded(child: Text(label)),
-      ],
-    ),
-  );
-}
-
-class _Metric extends StatelessWidget {
+class _StatBox extends StatelessWidget {
   final String label;
   final String value;
-  const _Metric({required this.label, required this.value});
+  final IconData icon;
+  final Color color;
+
+  const _StatBox({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
   @override
-  Widget build(BuildContext context) => SizedBox(
-    width: 150,
-    child: Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(value, style: Theme.of(context).textTheme.headlineSmall),
-            Text(label),
-          ],
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(AppDimensions.p12),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: AppDimensions.roundedMedium,
+        border: Border.all(
+          color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-    ),
-  );
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 22, color: color),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: AppTextStyles.titleMedium(context).copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyles.bodySmall(
+              context,
+              color: isDark
+                  ? AppColors.textMutedDark
+                  : AppColors.textSecondaryLight,
+            ).copyWith(fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
 }

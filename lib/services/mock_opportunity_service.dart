@@ -588,8 +588,9 @@ class MockOpportunityService implements OpportunityService {
     final index = _mockDatabase.indexWhere((opp) => opp.id == id);
     if (index != -1) {
       final current = _mockDatabase[index];
-      if (current.isClosed || current.deadline.isBefore(DateTime.now()))
+      if (current.isClosed || current.deadline.isBefore(DateTime.now())) {
         return false;
+      }
       final existing = await MockApplicationRepository.instance
           .findForStudentAndOpportunity('usr_student_01', id);
       if (existing != null) return false;

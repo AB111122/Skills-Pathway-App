@@ -25,7 +25,7 @@ class HomeDashboardScreen extends ConsumerWidget {
 
     final userName = authState.studentProfile?.fullName ??
         authState.currentUser?.name ??
-        'Fatima Zahra';
+        'Student';
 
     final opportunities = oppState.opportunities;
 
