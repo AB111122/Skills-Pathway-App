@@ -4,6 +4,8 @@ import '../../../models/user_model.dart';
 
 import 'dart:async';
 
+import '../../../core/constants/skill_catalog.dart';
+
 /// Service abstraction for Authentication.
 /// Can be replaced with a real Firebase / REST API Auth implementation in Phase 9.
 abstract class AuthService {
@@ -33,6 +35,10 @@ abstract class AuthService {
   Future<void> sendPasswordReset(String email);
   Future<void> logout();
   Future<StudentProfileModel?> getStudentProfile(String userId);
+  Future<StudentProfileModel> updateStudentSkills(
+    String userId,
+    List<String> skills,
+  );
   Future<OrganizationModel?> getOrganizationProfile(String userId);
 }
 
@@ -75,6 +81,7 @@ class MockAuthService implements AuthService {
     city: 'Islamabad, Pakistan',
     completionPercentage: 0.85,
   );
+  static List<String>? _savedMockStudentSkills;
 
   // Pre-seeded Mock Organization
   static final UserModel _mockOrgUser = UserModel(
@@ -134,6 +141,7 @@ class MockAuthService implements AuthService {
       );
       _currentStudentProfile = _mockStudentProfile.copyWith(
         fullName: _currentUser!.name,
+        skills: _savedMockStudentSkills ?? _mockStudentProfile.skills,
       );
       _authStateController.add(_currentUser);
       return _currentUser!;
@@ -234,6 +242,17 @@ class MockAuthService implements AuthService {
     _currentStudentProfile = null;
     _currentOrgProfile = null;
     _authStateController.add(null);
+  }
+
+  @override
+  Future<StudentProfileModel> updateStudentSkills(
+    String userId,
+    List<String> skills,
+  ) async {
+    _savedMockStudentSkills = SkillCatalog.normalizedUnique(skills);
+    final current = await getStudentProfile(userId);
+    _currentStudentProfile = current?.copyWith(skills: _savedMockStudentSkills);
+    return _currentStudentProfile!;
   }
 
   @override

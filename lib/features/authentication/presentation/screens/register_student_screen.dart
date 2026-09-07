@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/constants/skill_catalog.dart';
 import '../../../../core/routing/route_names.dart';
 import '../../../../core/theme/text_styles.dart';
 import '../../../../core/widgets/custom_button.dart';
@@ -34,21 +36,12 @@ class _RegisterStudentScreenState extends ConsumerState<RegisterStudentScreen> {
   String _educationLevel = 'Undergraduate';
   final _degreeController = TextEditingController(text: 'BS Computer Science');
   final _fieldController = TextEditingController(text: 'Computer Science');
-  final _universityController =
-      TextEditingController(text: 'National University of Sciences & Technology (NUST)');
+  final _universityController = TextEditingController(
+    text: 'National University of Sciences & Technology (NUST)',
+  );
 
   // Step 3: Skills & Interests
-  final List<String> _availableSkills = [
-    'Flutter',
-    'Python',
-    'Machine Learning',
-    'Data Analysis',
-    'SQL',
-    'Graphic Design',
-    'Financial Modeling',
-    'Digital Marketing',
-    'Public Speaking',
-  ];
+  final List<String> _availableSkills = SkillCatalog.all;
   final Set<String> _selectedSkills = {'Flutter', 'Python', 'Machine Learning'};
 
   final List<String> _availableInterests = [
@@ -89,25 +82,26 @@ class _RegisterStudentScreenState extends ConsumerState<RegisterStudentScreen> {
   }
 
   Future<void> _handleCompleteRegistration() async {
-    final success =
-        await ref.read(authControllerProvider.notifier).registerStudent(
-              fullName: _nameController.text.trim().isNotEmpty
-                  ? _nameController.text.trim()
-                  : 'Fatima Zahra',
-              email: _emailController.text.trim().isNotEmpty
-                  ? _emailController.text.trim()
-                  : 'fatima.zahra@nust.edu.pk',
-              password: _passwordController.text.isNotEmpty
-                  ? _passwordController.text
-                  : 'Password123',
-              city: _cityController.text.trim(),
-              educationLevel: _educationLevel,
-              degree: _degreeController.text.trim(),
-              fieldOfStudy: _fieldController.text.trim(),
-              university: _universityController.text.trim(),
-              skills: _selectedSkills.toList(),
-              careerInterests: _selectedInterests.toList(),
-            );
+    final success = await ref
+        .read(authControllerProvider.notifier)
+        .registerStudent(
+          fullName: _nameController.text.trim().isNotEmpty
+              ? _nameController.text.trim()
+              : 'Fatima Zahra',
+          email: _emailController.text.trim().isNotEmpty
+              ? _emailController.text.trim()
+              : 'fatima.zahra@nust.edu.pk',
+          password: _passwordController.text.isNotEmpty
+              ? _passwordController.text
+              : 'Password123',
+          city: _cityController.text.trim(),
+          educationLevel: _educationLevel,
+          degree: _degreeController.text.trim(),
+          fieldOfStudy: _fieldController.text.trim(),
+          university: _universityController.text.trim(),
+          skills: _selectedSkills.toList(),
+          careerInterests: _selectedInterests.toList(),
+        );
 
     if (success && mounted) {
       context.go(RouteNames.home);
@@ -120,8 +114,9 @@ class _RegisterStudentScreenState extends ConsumerState<RegisterStudentScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor: isDark
+          ? AppColors.backgroundDark
+          : AppColors.backgroundLight,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -210,7 +205,9 @@ class _RegisterStudentScreenState extends ConsumerState<RegisterStudentScreen> {
                   Expanded(
                     flex: 2,
                     child: CustomButton(
-                      text: _currentStep == 3 ? 'Complete & Start' : 'Next Step',
+                      text: _currentStep == 3
+                          ? 'Complete & Start'
+                          : 'Next Step',
                       variant: ButtonVariant.gradient,
                       isLoading: authState.isLoading,
                       icon: _currentStep == 3
@@ -247,10 +244,7 @@ class _RegisterStudentScreenState extends ConsumerState<RegisterStudentScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Personal Details',
-            style: AppTextStyles.titleLarge(context),
-          ),
+          Text('Personal Details', style: AppTextStyles.titleLarge(context)),
           const SizedBox(height: 4),
           Text(
             'Create your student credentials to receive personalized opportunities.',
@@ -262,8 +256,9 @@ class _RegisterStudentScreenState extends ConsumerState<RegisterStudentScreen> {
             hint: 'e.g. Fatima Zahra',
             controller: _nameController,
             prefixIcon: Icons.person_outline_rounded,
-            validator: (val) =>
-                val == null || val.trim().isEmpty ? AppStrings.fieldRequired : null,
+            validator: (val) => val == null || val.trim().isEmpty
+                ? AppStrings.fieldRequired
+                : null,
           ),
           const SizedBox(height: 16),
           CustomTextField(
@@ -273,8 +268,10 @@ class _RegisterStudentScreenState extends ConsumerState<RegisterStudentScreen> {
             prefixIcon: Icons.mail_outline_rounded,
             keyboardType: TextInputType.emailAddress,
             validator: (val) {
-              if (val == null || val.trim().isEmpty) return AppStrings.fieldRequired;
-              if (!val.contains('@') || !val.contains('.')) return AppStrings.invalidEmail;
+              if (val == null || val.trim().isEmpty)
+                return AppStrings.fieldRequired;
+              if (!val.contains('@') || !val.contains('.'))
+                return AppStrings.invalidEmail;
               return null;
             },
           ),
@@ -297,8 +294,9 @@ class _RegisterStudentScreenState extends ConsumerState<RegisterStudentScreen> {
             hint: 'e.g. Islamabad, Lahore, Karachi, Peshawar',
             controller: _cityController,
             prefixIcon: Icons.location_city_rounded,
-            validator: (val) =>
-                val == null || val.trim().isEmpty ? AppStrings.fieldRequired : null,
+            validator: (val) => val == null || val.trim().isEmpty
+                ? AppStrings.fieldRequired
+                : null,
           ),
         ],
       ),
@@ -311,10 +309,7 @@ class _RegisterStudentScreenState extends ConsumerState<RegisterStudentScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Academic Background',
-            style: AppTextStyles.titleLarge(context),
-          ),
+          Text('Academic Background', style: AppTextStyles.titleLarge(context)),
           const SizedBox(height: 4),
           Text(
             'We use your academic details to match verified scholarships and eligibility criteria.',
@@ -328,27 +323,30 @@ class _RegisterStudentScreenState extends ConsumerState<RegisterStudentScreen> {
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
-            children: [
-              'High School / FSC',
-              'Undergraduate',
-              'Master\'s',
-              'PhD',
-              'Fresh Graduate',
-            ].map((level) {
-              final isSelected = _educationLevel == level;
-              return ChoiceChip(
-                label: Text(level),
-                selected: isSelected,
-                selectedColor: AppColors.primary.withValues(alpha: 0.15),
-                labelStyle: TextStyle(
-                  color: isSelected ? AppColors.primary : null,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                ),
-                onSelected: (selected) {
-                  if (selected) setState(() => _educationLevel = level);
-                },
-              );
-            }).toList(),
+            children:
+                [
+                  'High School / FSC',
+                  'Undergraduate',
+                  'Master\'s',
+                  'PhD',
+                  'Fresh Graduate',
+                ].map((level) {
+                  final isSelected = _educationLevel == level;
+                  return ChoiceChip(
+                    label: Text(level),
+                    selected: isSelected,
+                    selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                    labelStyle: TextStyle(
+                      color: isSelected ? AppColors.primary : null,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                    ),
+                    onSelected: (selected) {
+                      if (selected) setState(() => _educationLevel = level);
+                    },
+                  );
+                }).toList(),
           ),
           const SizedBox(height: 20),
           CustomTextField(
@@ -356,8 +354,9 @@ class _RegisterStudentScreenState extends ConsumerState<RegisterStudentScreen> {
             hint: 'e.g. BS Computer Science, BBA, MBBS',
             controller: _degreeController,
             prefixIcon: Icons.school_outlined,
-            validator: (val) =>
-                val == null || val.trim().isEmpty ? AppStrings.fieldRequired : null,
+            validator: (val) => val == null || val.trim().isEmpty
+                ? AppStrings.fieldRequired
+                : null,
           ),
           const SizedBox(height: 16),
           CustomTextField(
@@ -365,8 +364,9 @@ class _RegisterStudentScreenState extends ConsumerState<RegisterStudentScreen> {
             hint: 'e.g. Computer Science, AI, Business, Pre-Med',
             controller: _fieldController,
             prefixIcon: Icons.menu_book_rounded,
-            validator: (val) =>
-                val == null || val.trim().isEmpty ? AppStrings.fieldRequired : null,
+            validator: (val) => val == null || val.trim().isEmpty
+                ? AppStrings.fieldRequired
+                : null,
           ),
           const SizedBox(height: 16),
           CustomTextField(
@@ -374,8 +374,9 @@ class _RegisterStudentScreenState extends ConsumerState<RegisterStudentScreen> {
             hint: 'e.g. NUST, FAST-NUCES, LUMS, GIKI, UET',
             controller: _universityController,
             prefixIcon: Icons.account_balance_rounded,
-            validator: (val) =>
-                val == null || val.trim().isEmpty ? AppStrings.fieldRequired : null,
+            validator: (val) => val == null || val.trim().isEmpty
+                ? AppStrings.fieldRequired
+                : null,
           ),
         ],
       ),
@@ -386,20 +387,14 @@ class _RegisterStudentScreenState extends ConsumerState<RegisterStudentScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Skills & Career Goals',
-          style: AppTextStyles.titleLarge(context),
-        ),
+        Text('Skills & Career Goals', style: AppTextStyles.titleLarge(context)),
         const SizedBox(height: 4),
         Text(
           'Select your top skills and preferred career trajectories.',
           style: AppTextStyles.bodySmall(context),
         ),
         const SizedBox(height: 24),
-        Text(
-          'Your Current Skills',
-          style: AppTextStyles.labelMedium(context),
-        ),
+        Text('Your Current Skills', style: AppTextStyles.labelMedium(context)),
         const SizedBox(height: 10),
         Wrap(
           spacing: 8,
@@ -428,10 +423,7 @@ class _RegisterStudentScreenState extends ConsumerState<RegisterStudentScreen> {
           }).toList(),
         ),
         const SizedBox(height: 24),
-        Text(
-          'Target Career Fields',
-          style: AppTextStyles.labelMedium(context),
-        ),
+        Text('Target Career Fields', style: AppTextStyles.labelMedium(context)),
         const SizedBox(height: 10),
         Wrap(
           spacing: 8,

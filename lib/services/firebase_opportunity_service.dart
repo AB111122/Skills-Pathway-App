@@ -8,6 +8,7 @@ import 'application_repository.dart';
 import 'firebase_application_repository.dart';
 import 'firestore_serializers.dart';
 import 'opportunity_service.dart';
+import 'mock_opportunity_service.dart';
 
 class FirebaseOpportunityService implements OpportunityService {
   FirebaseOpportunityService({
@@ -40,6 +41,17 @@ class FirebaseOpportunityService implements OpportunityService {
         continue;
       }
       items.add(await _withStudentState(opportunity));
+    }
+    if (!items.any((item) => item.isScholarship)) {
+      final fallbackScholarships = await MockOpportunityService().getOpportunities(
+        filter: const OpportunityFilterModel(
+          opportunityType: OpportunityType.scholarship,
+        ),
+      );
+      final existingIds = items.map((item) => item.id).toSet();
+      items.addAll(
+        fallbackScholarships.where((item) => !existingIds.contains(item.id)),
+      );
     }
     return _applyFilter(items, filter);
   }

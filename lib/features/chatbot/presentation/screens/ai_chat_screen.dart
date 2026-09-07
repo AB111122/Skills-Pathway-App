@@ -5,9 +5,8 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../models/chat_message_model.dart';
 import '../../../../services/ai_service.dart';
 import '../../../authentication/presentation/controllers/auth_controller.dart';
-import '../../../opportunities/presentation/controllers/opportunity_controller.dart';
 
-final aiServiceProvider = Provider<AiService>((ref) => MockAiService(ref.read(opportunityServiceProvider)));
+final aiServiceProvider = Provider<AiService>((ref) => OpenAiCompatibleService());
 
 class AiChatScreen extends ConsumerStatefulWidget {
   final String? starter;
@@ -27,9 +26,19 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     _input.clear();
     setState(() { _loading = true; _messages.add(ChatMessageModel(id: _uuid.v4(), sender: ChatSender.user, content: text.trim(), timestamp: DateTime.now())); });
     try {
-      final reply = await ref.read(aiServiceProvider).sendMessage(text, ref.read(authControllerProvider).studentProfile);
+      final reply = await ref.read(aiServiceProvider).sendMessage(
+        text,
+        ref.read(authControllerProvider).studentProfile,
+        history: _messages
+        .where((message) => message.sender != ChatSender.assistant || message.status != ChatMessageStatus.failed)
+        .map((message) => ChatTurn(
+          fromUser: message.sender == ChatSender.user,
+          content: message.content,
+            ))
+        .toList(),
+      );
       if (mounted) setState(() { _messages.add(ChatMessageModel(id: _uuid.v4(), sender: ChatSender.assistant, content: reply, timestamp: DateTime.now())); _loading = false; });
-    } catch (_) { if (mounted) setState(() { _messages.add(ChatMessageModel(id: _uuid.v4(), sender: ChatSender.assistant, content: 'Something went wrong. Try again.', timestamp: DateTime.now(), status: ChatMessageStatus.failed)); _loading = false; }); }
+    } catch (error) { if (mounted) setState(() { _messages.add(ChatMessageModel(id: _uuid.v4(), sender: ChatSender.assistant, content: error is StateError && error.message.toString().contains('not configured') ? error.message.toString() : 'Unable to reach the AI assistant right now. Please check your connection and try again.', timestamp: DateTime.now(), status: ChatMessageStatus.failed)); _loading = false; }); }
     WidgetsBinding.instance.addPostFrameCallback((_) { if (_scroll.hasClients) _scroll.animateTo(_scroll.position.maxScrollExtent, duration: const Duration(milliseconds: 250), curve: Curves.easeOut); });
   }
   @override

@@ -137,6 +137,27 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
+  Future<bool> updateStudentSkills(List<String> skills) async {
+    final userId = state.currentUser?.id;
+    if (userId == null || state.studentProfile == null) return false;
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final profile = await _authService.updateStudentSkills(userId, skills);
+      state = state.copyWith(
+        isLoading: false,
+        studentProfile: profile,
+        errorMessage: null,
+      );
+      return true;
+    } catch (error) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: _friendlyError(error),
+      );
+      return false;
+    }
+  }
+
   /// Register as an Organization
   Future<bool> registerOrganization({
     required String orgName,

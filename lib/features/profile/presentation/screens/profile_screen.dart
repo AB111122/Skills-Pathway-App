@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
+import '../../../../core/constants/skill_catalog.dart';
 import '../../../../core/routing/route_names.dart';
 import '../../../../core/theme/text_styles.dart';
 import '../../../../core/widgets/custom_button.dart';
@@ -12,11 +13,36 @@ import '../../../../core/widgets/verified_badge.dart';
 import '../../../authentication/presentation/controllers/auth_controller.dart';
 
 /// User Profile Screen (Student / Organization)
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  Future<void> _editSkills(List<String> initialSkills) async {
+    final selected = await showDialog<List<String>>(
+      context: context,
+      builder: (dialogContext) =>
+          _SkillEditorDialog(initialSkills: initialSkills),
+    );
+    if (selected == null || !mounted) return;
+    final saved = await ref
+        .read(authControllerProvider.notifier)
+        .updateStudentSkills(selected);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          saved ? 'Skills updated successfully.' : 'Unable to update skills.',
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -187,6 +213,17 @@ class ProfileScreen extends ConsumerWidget {
                           );
                         }).toList(),
                       ),
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: authState.isLoading
+                              ? null
+                              : () => _editSkills(studentProfile.skills),
+                          icon: const Icon(Icons.edit_outlined),
+                          label: const Text('Update Skills'),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -344,6 +381,141 @@ class ProfileScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SkillEditorDialog extends StatefulWidget {
+  final List<String> initialSkills;
+
+  const _SkillEditorDialog({required this.initialSkills});
+
+  @override
+  State<_SkillEditorDialog> createState() => _SkillEditorDialogState();
+}
+
+class _SkillEditorDialogState extends State<_SkillEditorDialog> {
+  late final Set<String> _selected;
+  final _searchController = TextEditingController();
+  final _customController = TextEditingController();
+  String _query = '';
+  String? _customError;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = SkillCatalog.normalizedUnique(widget.initialSkills).toSet();
+    _searchController.addListener(() {
+      setState(() => _query = _searchController.text.trim().toLowerCase());
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _customController.dispose();
+    super.dispose();
+  }
+
+  void _addCustomSkill() {
+    final value = _customController.text.trim();
+    if (value.isEmpty) {
+      setState(() => _customError = 'Enter a skill.');
+      return;
+    }
+    if (_selected.any((skill) => skill.toLowerCase() == value.toLowerCase())) {
+      setState(() => _customError = 'That skill is already selected.');
+      return;
+    }
+    setState(() {
+      _selected.add(value);
+      _customController.clear();
+      _customError = null;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final options = SkillCatalog.all.where(
+      (skill) =>
+          skill != SkillCatalog.customSkill &&
+          skill.toLowerCase().contains(_query),
+    );
+    return AlertDialog(
+      title: const Text('Update Skills'),
+      content: SizedBox(
+        width: 420,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  labelText: 'Search skills',
+                  prefixIcon: Icon(Icons.search),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: options.map((skill) {
+                  return FilterChip(
+                    label: Text(skill),
+                    selected: _selected.contains(skill),
+                    onSelected: (value) => setState(() {
+                      value ? _selected.add(skill) : _selected.remove(skill);
+                    }),
+                  );
+                }).toList(),
+              ),
+              const Divider(height: 28),
+              TextField(
+                controller: _customController,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _addCustomSkill(),
+                decoration: InputDecoration(
+                  labelText: 'Other / Custom skill',
+                  hintText: 'e.g. Automotive Diagnostics',
+                  errorText: _customError,
+                  suffixIcon: IconButton(
+                    tooltip: 'Add skill',
+                    onPressed: _addCustomSkill,
+                    icon: const Icon(Icons.add),
+                  ),
+                ),
+              ),
+              if (_selected.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text('Selected', style: Theme.of(context).textTheme.labelLarge),
+                Wrap(
+                  spacing: 6,
+                  children: _selected.map((skill) {
+                    return InputChip(
+                      label: Text(skill),
+                      onDeleted: () => setState(() => _selected.remove(skill)),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () =>
+              Navigator.of(context)
+                  .pop(SkillCatalog.normalizedUnique(_selected)),
+          child: const Text('Save Skills'),
+        ),
+      ],
     );
   }
 }

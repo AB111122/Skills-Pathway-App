@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../../../models/organization_model.dart';
 import '../../../models/student_profile_model.dart';
 import '../../../models/user_model.dart';
+import '../../../core/constants/skill_catalog.dart';
 import 'mock_auth_service.dart';
 
 class FirebaseAuthService implements AuthService {
@@ -167,6 +168,21 @@ class FirebaseAuthService implements AuthService {
     final profile = data?['studentProfile'];
     if (profile is! Map) return null;
     return _studentProfileFromMap(Map<String, dynamic>.from(profile));
+  }
+
+  @override
+  Future<StudentProfileModel> updateStudentSkills(
+    String userId,
+    List<String> skills,
+  ) async {
+    final normalized = SkillCatalog.normalizedUnique(skills);
+    await _users.doc(userId).update({
+      'studentProfile.skills': normalized,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    final profile = await getStudentProfile(userId);
+    if (profile == null) throw StateError('Student profile not found.');
+    return profile;
   }
 
   @override
