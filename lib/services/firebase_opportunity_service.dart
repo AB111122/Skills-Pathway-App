@@ -43,11 +43,12 @@ class FirebaseOpportunityService implements OpportunityService {
       items.add(await _withStudentState(opportunity));
     }
     if (!items.any((item) => item.isScholarship)) {
-      final fallbackScholarships = await MockOpportunityService().getOpportunities(
-        filter: const OpportunityFilterModel(
-          opportunityType: OpportunityType.scholarship,
-        ),
-      );
+      final fallbackScholarships = await MockOpportunityService()
+          .getOpportunities(
+            filter: const OpportunityFilterModel(
+              opportunityType: OpportunityType.scholarship,
+            ),
+          );
       final existingIds = items.map((item) => item.id).toSet();
       items.addAll(
         fallbackScholarships.where((item) => !existingIds.contains(item.id)),
