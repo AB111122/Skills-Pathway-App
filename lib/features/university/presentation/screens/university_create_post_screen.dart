@@ -66,6 +66,7 @@ class _UniversityCreatePostScreenState
             topic: _category!,
           );
       if (mounted) {
+        ref.invalidate(communityRepositoryProvider);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('University post published')),
         );

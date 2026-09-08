@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../models/opportunity_model.dart';
+import '../../../opportunities/presentation/controllers/opportunity_controller.dart';
 import '../../../authentication/presentation/controllers/auth_controller.dart';
 import '../university_provider.dart';
 
@@ -109,6 +110,7 @@ class _CreateOpportunityScreenState
         );
       }
       if (!mounted) return;
+      ref.invalidate(opportunityControllerProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(

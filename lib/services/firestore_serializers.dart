@@ -31,8 +31,13 @@ class FirestoreSerializers {
   }) {
     final data = Map<String, dynamic>.from(source);
     data['id'] = id;
-    data['deadline'] = date(data['deadline']).toIso8601String();
+    data['deadline'] = date(
+      data['deadline'],
+      fallback: DateTime.utc(9999, 12, 31),
+    ).toIso8601String();
     data['createdAt'] = date(data['createdAt']).toIso8601String();
+    data['type'] = _normalizedOpportunityType(data['type']);
+    data['status'] = _normalizedOpportunityStatus(data['status']);
     if (data['appliedAt'] != null) {
       data['appliedAt'] = date(data['appliedAt']).toIso8601String();
     }
@@ -105,6 +110,7 @@ class FirestoreSerializers {
     Map<String, dynamic> data, {
     required String id,
   }) {
+    final normalizedStatus = _normalizedPostStatus(data['status']);
     return PostModel(
       id: id,
       authorId: data['authorId'] as String? ?? '',
@@ -120,11 +126,38 @@ class FirestoreSerializers {
       updatedAt: date(data['updatedAt']),
       likesCount: (data['likesCount'] as num?)?.toInt() ?? 0,
       commentsCount: (data['commentsCount'] as num?)?.toInt() ?? 0,
-      status: PostStatus.values.firstWhere(
-        (value) => value.name == data['status'],
-        orElse: () => PostStatus.approved,
-      ),
+      status: normalizedStatus,
       reportCount: (data['reportCount'] as num?)?.toInt() ?? 0,
     );
+  }
+
+  static String _normalizedOpportunityType(Object? value) {
+    final normalized = value?.toString().toLowerCase().trim();
+    return OpportunityType.values.any((type) => type.name == normalized)
+        ? normalized!
+        : OpportunityType.scholarship.name;
+  }
+
+  static String _normalizedOpportunityStatus(Object? value) {
+    final normalized = value?.toString().toLowerCase().trim();
+    return OpportunityStatus.values.any((status) => status.name == normalized)
+        ? normalized!
+        : OpportunityStatus.published.name;
+  }
+
+  static PostStatus _normalizedPostStatus(Object? value) {
+    switch (value?.toString().toLowerCase().trim()) {
+      case 'pending':
+        return PostStatus.pending;
+      case 'rejected':
+        return PostStatus.rejected;
+      case 'approved':
+      case 'published':
+      case 'public':
+      case null:
+        return PostStatus.approved;
+      default:
+        return PostStatus.approved;
+    }
   }
 }

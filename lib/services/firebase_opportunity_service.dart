@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/application_model.dart';
 import '../models/opportunity_filter_model.dart';
@@ -30,14 +31,23 @@ class FirebaseOpportunityService implements OpportunityService {
   Future<List<OpportunityModel>> getOpportunities({
     OpportunityFilterModel? filter,
   }) async {
-    final snapshot = await _opportunities
-        .where('status', isNotEqualTo: OpportunityStatus.closed.name)
-        .get();
+    QuerySnapshot<Map<String, dynamic>> snapshot;
+    try {
+      // Read the public collection without a compound/index-sensitive query;
+      // publication, deadline, and filters are enforced below in Dart.
+      snapshot = await _opportunities.get();
+    } on FirebaseException catch (error, stackTrace) {
+      debugPrint('[OpportunityRepository] ${error.code}: ${error.message}');
+      debugPrintStack(stackTrace: stackTrace);
+      rethrow;
+    }
     final items = <OpportunityModel>[];
     for (final document in snapshot.docs) {
       final opportunity = _fromSnapshot(document);
-      if (opportunity.status != OpportunityStatus.published ||
-          !opportunity.deadline.isAfter(DateTime.now())) {
+      if (opportunity.status != OpportunityStatus.published) {
+        continue;
+      }
+      if (opportunity.deadline.isBefore(DateTime.now())) {
         continue;
       }
       items.add(await _withStudentState(opportunity));
@@ -61,7 +71,12 @@ class FirebaseOpportunityService implements OpportunityService {
   Future<OpportunityModel?> getOpportunityById(String id) async {
     final snapshot = await _opportunities.doc(id).get();
     if (!snapshot.exists) return null;
-    return _withStudentState(_fromSnapshot(snapshot));
+    final opportunity = _fromSnapshot(snapshot);
+    if (opportunity.status != OpportunityStatus.published ||
+        opportunity.deadline.isBefore(DateTime.now())) {
+      return null;
+    }
+    return _withStudentState(opportunity);
   }
 
   @override

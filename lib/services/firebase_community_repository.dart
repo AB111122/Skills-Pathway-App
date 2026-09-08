@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uuid/uuid.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/comment_model.dart';
 import '../models/post_model.dart';
@@ -25,7 +26,15 @@ class FirebaseCommunityRepository implements CommunityRepository {
 
   @override
   Future<List<PostModel>> getPosts({String? topic}) async {
-    final snapshot = await _posts.get();
+    QuerySnapshot<Map<String, dynamic>> snapshot;
+    try {
+      // Both student and university posts use the same public feed collection.
+      snapshot = await _posts.get();
+    } on FirebaseException catch (error, stackTrace) {
+      debugPrint('[CommunityRepository] ${error.code}: ${error.message}');
+      debugPrintStack(stackTrace: stackTrace);
+      rethrow;
+    }
     final items = snapshot.docs
         .map(_fromPost)
         .where((post) => post.status == PostStatus.approved)
