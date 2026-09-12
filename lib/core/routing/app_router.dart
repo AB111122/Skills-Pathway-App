@@ -179,11 +179,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
-        path: RouteNames.applications,
-        builder: (_, _) => const StudentApplicationsScreen(),
-      ),
-      GoRoute(
-        parentNavigatorKey: rootNavigatorKey,
         path: '/network/create',
         builder: (context, state) => const CreatePostScreen(),
       ),
@@ -331,6 +326,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: RouteNames.profile,
                 builder: (context, state) => const ProfileScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'applications',
+                    builder: (_, _) => const StudentApplicationsScreen(),
+                  ),
+                ],
               ),
             ],
           ),

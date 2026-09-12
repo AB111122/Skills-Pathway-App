@@ -40,55 +40,75 @@ void main() {
 
       final firstApplicant = universityApplicants.first;
       expect(firstApplicant.opportunityId, opp.id);
+      expect(firstApplicant.opportunityId, isNotEmpty);
       expect(firstApplicant.universityId, 'org_nust_flow');
       expect(firstApplicant.status, ApplicationStatus.pending);
     });
 
-    test('University status updates synchronize in real-time for student view', () async {
-      const studentId = 'usr_student_01';
-      const universityId = 'org_fast_sync';
-      final app = ApplicationModel(
-        id: 'app_sync_test_01',
-        studentId: studentId,
-        studentName: 'Fatima Zahra',
-        opportunityId: 'opp_fast_01',
-        opportunityTitle: 'FAST AI Fellowship',
-        universityId: universityId,
-        universityName: 'FAST NUCES',
-        applicationDate: DateTime.now(),
-        status: ApplicationStatus.pending,
-      );
+    test(
+      'University status updates synchronize in real-time for student view',
+      () async {
+        const studentId = 'usr_student_01';
+        const universityId = 'org_fast_sync';
+        final app = ApplicationModel(
+          id: 'app_sync_test_01',
+          studentId: studentId,
+          studentName: 'Fatima Zahra',
+          opportunityId: 'opp_fast_01',
+          opportunityTitle: 'FAST AI Fellowship',
+          universityId: universityId,
+          universityName: 'FAST NUCES',
+          applicationDate: DateTime.now(),
+          status: ApplicationStatus.pending,
+        );
 
-      await appRepo.create(app);
+        await appRepo.create(app);
 
-      // 1. Initial status is pending
-      final studentAppsInit = await appRepo.forStudent(studentId);
-      expect(
-        studentAppsInit.firstWhere((a) => a.id == 'app_sync_test_01').status,
-        ApplicationStatus.pending,
-      );
+        // 1. Initial status is pending
+        final studentAppsInit = await appRepo.forStudent(studentId);
+        expect(
+          studentAppsInit.firstWhere((a) => a.id == 'app_sync_test_01').status,
+          ApplicationStatus.pending,
+        );
 
-      // 2. University changes status to reviewed
-      await appRepo.updateStatus(universityId, app.id, ApplicationStatus.reviewed);
-      final studentAppsReviewed = await appRepo.forStudent(studentId);
-      expect(
-        studentAppsReviewed.firstWhere((a) => a.id == 'app_sync_test_01').status,
-        ApplicationStatus.reviewed,
-      );
+        // 2. University changes status to reviewed
+        await appRepo.updateStatus(
+          universityId,
+          app.id,
+          ApplicationStatus.reviewed,
+        );
+        final studentAppsReviewed = await appRepo.forStudent(studentId);
+        expect(
+          studentAppsReviewed
+              .firstWhere((a) => a.id == 'app_sync_test_01')
+              .status,
+          ApplicationStatus.reviewed,
+        );
 
-      // 3. University changes status to shortlisted
-      await appRepo.updateStatus(universityId, app.id, ApplicationStatus.shortlisted);
-      final studentAppsShortlisted = await appRepo.forStudent(studentId);
-      expect(
-        studentAppsShortlisted.firstWhere((a) => a.id == 'app_sync_test_01').status,
-        ApplicationStatus.shortlisted,
-      );
+        // 3. University changes status to shortlisted
+        await appRepo.updateStatus(
+          universityId,
+          app.id,
+          ApplicationStatus.shortlisted,
+        );
+        final studentAppsShortlisted = await appRepo.forStudent(studentId);
+        expect(
+          studentAppsShortlisted
+              .firstWhere((a) => a.id == 'app_sync_test_01')
+              .status,
+          ApplicationStatus.shortlisted,
+        );
 
-      // 4. Unauthorized university cannot change applicant status
-      expect(
-        () => appRepo.updateStatus('org_fake_university', app.id, ApplicationStatus.rejected),
-        throwsStateError,
-      );
-    });
+        // 4. Unauthorized university cannot change applicant status
+        expect(
+          () => appRepo.updateStatus(
+            'org_fake_university',
+            app.id,
+            ApplicationStatus.rejected,
+          ),
+          throwsStateError,
+        );
+      },
+    );
   });
 }

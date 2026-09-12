@@ -10,7 +10,9 @@ import '../../../../core/theme/text_styles.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/stat_badge.dart';
 import '../../../../core/widgets/verified_badge.dart';
+import '../../../../core/widgets/opportunity_card.dart';
 import '../../../authentication/presentation/controllers/auth_controller.dart';
+import '../../../opportunities/presentation/controllers/opportunity_controller.dart';
 
 /// User Profile Screen (Student / Organization)
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -44,6 +46,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
+    final opportunityState = ref.watch(opportunityControllerProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final user = authState.currentUser;
@@ -230,6 +233,43 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 const SizedBox(height: 20),
               ],
 
+              if (!isOrg) ...[
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Available Opportunities',
+                    style: AppTextStyles.titleMedium(context),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                if (opportunityState.isLoading &&
+                    opportunityState.opportunities.isEmpty)
+                  const Center(child: CircularProgressIndicator())
+                else if (opportunityState.opportunities.isEmpty)
+                  Text(
+                    'No available opportunities right now.',
+                    style: AppTextStyles.bodyMedium(context),
+                  )
+                else
+                  ...opportunityState.opportunities
+                      .take(3)
+                      .map(
+                        (opportunity) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: OpportunityCard(
+                            opportunity: opportunity,
+                            onTap: () => context.push(
+                              '/opportunities/${opportunity.id}',
+                            ),
+                            onSaveToggle: () => ref
+                                .read(opportunityControllerProvider.notifier)
+                                .toggleSave(opportunity.id),
+                          ),
+                        ),
+                      ),
+                const SizedBox(height: 8),
+              ],
+
               // Quick Actions
               _buildActionTile(
                 context,
@@ -244,7 +284,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 icon: Icons.assignment_outlined,
                 title: 'My Applications',
                 subtitle: 'Track the status of submitted applications',
-                onTap: () => context.go(RouteNames.applications),
+                onTap: () => context.push(RouteNames.applications),
               ),
               const SizedBox(height: 8),
               _buildActionTile(

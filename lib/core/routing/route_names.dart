@@ -14,12 +14,13 @@ class RouteNames {
   static const String network = '/network';
   static const String chatbot = '/chatbot';
   static const String profile = '/profile';
-  static const String applications = '/applications';
+  static const String applications = '/profile/applications';
 
   // University Portal
   static const String universityDashboard = '/university/dashboard';
   static const String universityOpportunities = '/university/opportunities';
-  static const String universityCreateOpportunity = '/university/opportunities/create';
+  static const String universityCreateOpportunity =
+      '/university/opportunities/create';
   static const String universityApplications = '/university/applications';
   static const String universityCreatePost = '/university/posts/create';
   static const String universityPosts = '/university/posts';
