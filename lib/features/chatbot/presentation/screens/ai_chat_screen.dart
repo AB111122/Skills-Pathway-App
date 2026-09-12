@@ -4,12 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../models/chat_message_model.dart';
-import '../../../../services/ai_service.dart';
-import '../../../authentication/presentation/controllers/auth_controller.dart';
-
-final aiServiceProvider = Provider<AiService>(
-  (ref) => OpenAiCompatibleService(),
-);
+import '../../../../services/gemini_service.dart';
 
 class AiChatScreen extends ConsumerStatefulWidget {
   final String? starter;
@@ -24,13 +19,24 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   final _messages = <ChatMessageModel>[];
   bool _loading = false;
   final _uuid = const Uuid();
+  GeminiService? _geminiService;
+
   @override
   void initState() {
     super.initState();
+    _initGemini();
     if (widget.starter != null) {
       WidgetsBinding.instance.addPostFrameCallback(
         (_) => _send(widget.starter!),
       );
+    }
+  }
+
+  void _initGemini() {
+    try {
+      _geminiService = GeminiService();
+    } catch (_) {
+      // Lazy initialization fallback upon first message send
     }
   }
 
@@ -42,7 +48,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   }
 
   Future<void> _send(String text) async {
-    if (_loading || text.trim().isEmpty) return;
+    final userText = text.trim();
+    if (_loading || userText.isEmpty) return;
     _input.clear();
     setState(() {
       _loading = true;
@@ -50,32 +57,16 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         ChatMessageModel(
           id: _uuid.v4(),
           sender: ChatSender.user,
-          content: text.trim(),
+          content: userText,
           timestamp: DateTime.now(),
         ),
       );
     });
     try {
-      final reply = await ref
-          .read(aiServiceProvider)
-          .sendMessage(
-            text,
-            ref.read(authControllerProvider).studentProfile,
-            history: _messages
-                .where(
-                  (message) =>
-                      message.sender != ChatSender.assistant ||
-                      message.status != ChatMessageStatus.failed,
-                )
-                .map(
-                  (message) => ChatTurn(
-                    fromUser: message.sender == ChatSender.user,
-                    content: message.content,
-                  ),
-                )
-                .toList(),
-          );
-      if (mounted)
+      _geminiService ??= GeminiService();
+      final reply = await _geminiService!.sendMessage(userText);
+      final isError = reply.startsWith('Error contacting AI:');
+      if (mounted) {
         setState(() {
           _messages.add(
             ChatMessageModel(
@@ -83,36 +74,38 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
               sender: ChatSender.assistant,
               content: reply,
               timestamp: DateTime.now(),
+              status: isError
+                  ? ChatMessageStatus.failed
+                  : ChatMessageStatus.sent,
             ),
           );
           _loading = false;
         });
+      }
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _messages.add(
             ChatMessageModel(
               id: _uuid.v4(),
               sender: ChatSender.assistant,
-              content:
-                  error is StateError &&
-                      error.message.toString().contains('not configured')
-                  ? error.message.toString()
-                  : 'Unable to reach the AI assistant right now. Please check your connection and try again.',
+              content: 'Error contacting AI: $error',
               timestamp: DateTime.now(),
               status: ChatMessageStatus.failed,
             ),
           );
           _loading = false;
         });
+      }
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scroll.hasClients)
+      if (_scroll.hasClients) {
         _scroll.animateTo(
           _scroll.position.maxScrollExtent,
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOut,
         );
+      }
     });
   }
 
@@ -123,7 +116,12 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         title: const Text('AI Career Assistant'),
         actions: [
           IconButton(
-            onPressed: () => setState(_messages.clear),
+            onPressed: () {
+              setState(() {
+                _messages.clear();
+                _initGemini();
+              });
+            },
             icon: const Icon(Icons.add_comment_outlined),
           ),
         ],

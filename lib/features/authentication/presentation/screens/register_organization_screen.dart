@@ -72,7 +72,14 @@ class _RegisterOrganizationScreenState
             );
 
     if (success && mounted) {
-      context.go(RouteNames.universityDashboard);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Account created successfully'),
+          backgroundColor: AppColors.primaryMint,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      context.go(RouteNames.login);
     }
   }
 

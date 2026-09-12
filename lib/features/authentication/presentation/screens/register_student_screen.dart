@@ -104,7 +104,14 @@ class _RegisterStudentScreenState extends ConsumerState<RegisterStudentScreen> {
         );
 
     if (success && mounted) {
-      context.go(RouteNames.home);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Account created successfully'),
+          backgroundColor: AppColors.primaryMint,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      context.go(RouteNames.login);
     }
   }
 
@@ -268,10 +275,12 @@ class _RegisterStudentScreenState extends ConsumerState<RegisterStudentScreen> {
             prefixIcon: Icons.mail_outline_rounded,
             keyboardType: TextInputType.emailAddress,
             validator: (val) {
-              if (val == null || val.trim().isEmpty)
+              if (val == null || val.trim().isEmpty) {
                 return AppStrings.fieldRequired;
-              if (!val.contains('@') || !val.contains('.'))
+              }
+              if (!val.contains('@') || !val.contains('.')) {
                 return AppStrings.invalidEmail;
+              }
               return null;
             },
           ),

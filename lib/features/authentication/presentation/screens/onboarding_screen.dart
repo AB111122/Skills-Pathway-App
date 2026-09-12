@@ -110,80 +110,98 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   final item = _items[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 28.0),
-                    child: Center(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                        // Icon Hero Container
-                        Container(
-                          width: 140,
-                          height: 140,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: item.iconColor.withValues(alpha: 0.12),
-                            border: Border.all(
-                              color: item.iconColor.withValues(alpha: 0.3),
-                              width: 2,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final screenHeight = MediaQuery.of(context).size.height;
+                        final isCompact = screenHeight < 700;
+                        final iconSize = isCompact ? 100.0 : 130.0;
+                        final iconInner = isCompact ? 50.0 : 64.0;
+                        final spacing = isCompact ? 18.0 : 28.0;
+
+                        return SingleChildScrollView(
+                          physics: const ClampingScrollPhysics(),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: constraints.maxHeight,
+                            ),
+                            child: IntrinsicHeight(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  // Icon Hero Container
+                                  Container(
+                                    width: iconSize,
+                                    height: iconSize,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: item.iconColor.withValues(alpha: 0.12),
+                                      border: Border.all(
+                                        color: item.iconColor.withValues(alpha: 0.3),
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: Icon(
+                                        item.icon,
+                                        size: iconInner,
+                                        color: item.iconColor,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(height: spacing),
+
+                                  // Badge Pill
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withValues(alpha: 0.08),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      item.badgeText,
+                                      style: AppTextStyles.labelSmall(
+                                        context,
+                                        color: AppColors.primary,
+                                      ).copyWith(fontWeight: FontWeight.w700),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 14),
+
+                                  // Title
+                                  Text(
+                                    item.title,
+                                    textAlign: TextAlign.center,
+                                    style: AppTextStyles.displayMedium(context)
+                                        .copyWith(
+                                      fontSize: isCompact ? 20 : 23,
+                                      height: 1.25,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+
+                                  // Description
+                                  Text(
+                                    item.description,
+                                    textAlign: TextAlign.center,
+                                    style: AppTextStyles.bodyMedium(
+                                      context,
+                                      color: isDark
+                                          ? AppColors.textSecondaryDark
+                                          : AppColors.textSecondaryLight,
+                                    ).copyWith(
+                                      fontSize: isCompact ? 13 : 14,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          child: Center(
-                            child: Icon(
-                              item.icon,
-                              size: 70,
-                              color: item.iconColor,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-
-                        // Badge Pill
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            item.badgeText,
-                            style: AppTextStyles.labelSmall(
-                              context,
-                              color: AppColors.primary,
-                            ).copyWith(fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Title
-                        Text(
-                          item.title,
-                          textAlign: TextAlign.center,
-                          style: AppTextStyles.displayMedium(context).copyWith(
-                            fontSize: 24,
-                            height: 1.25,
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-
-                        // Description
-                        Text(
-                          item.description,
-                          textAlign: TextAlign.center,
-                          style: AppTextStyles.bodyMedium(
-                            context,
-                            color: isDark
-                                ? AppColors.textSecondaryDark
-                                : AppColors.textSecondaryLight,
-                          ),
-                        ),
-                          ],
-                        ),
-                      ),
+                        );
+                      },
                     ),
                   );
                 },

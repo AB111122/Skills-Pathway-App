@@ -109,7 +109,7 @@ class AuthController extends StateNotifier<AuthState> {
   }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      final user = await _authService.registerStudent(
+      await _authService.registerStudent(
         fullName: fullName,
         email: email,
         password: password,
@@ -121,13 +121,13 @@ class AuthController extends StateNotifier<AuthState> {
         skills: skills,
         careerInterests: careerInterests,
       );
-      final studentProfile = await _authService.getStudentProfile(user.id);
+      await _authService.logout();
 
       state = state.copyWith(
-        isAuthenticated: true,
+        isAuthenticated: false,
         isLoading: false,
-        currentUser: user,
-        studentProfile: studentProfile,
+        currentUser: null,
+        studentProfile: null,
         errorMessage: null,
       );
       return true;
@@ -170,7 +170,7 @@ class AuthController extends StateNotifier<AuthState> {
   }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      final user = await _authService.registerOrganization(
+      await _authService.registerOrganization(
         orgName: orgName,
         orgType: orgType,
         officialEmail: officialEmail,
@@ -179,13 +179,13 @@ class AuthController extends StateNotifier<AuthState> {
         city: city,
         registrationNumber: registrationNumber,
       );
-      final orgProfile = await _authService.getOrganizationProfile(user.id);
+      await _authService.logout();
 
       state = state.copyWith(
-        isAuthenticated: true,
+        isAuthenticated: false,
         isLoading: false,
-        currentUser: user,
-        organizationProfile: orgProfile,
+        currentUser: null,
+        organizationProfile: null,
         errorMessage: null,
       );
       return true;
