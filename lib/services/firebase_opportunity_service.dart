@@ -31,26 +31,41 @@ class FirebaseOpportunityService implements OpportunityService {
   Future<List<OpportunityModel>> getOpportunities({
     OpportunityFilterModel? filter,
   }) async {
+    final currentUid = _auth.currentUser?.uid;
+    debugPrint(
+      '[FirebaseOpportunityService] Executing query on collection path: "/opportunities" (flat collection, no where/orderBy clauses). Current FirebaseAuth UID: $currentUid',
+    );
     QuerySnapshot<Map<String, dynamic>> snapshot;
     try {
       // Read the public collection without a compound/index-sensitive query;
       // publication, deadline, and filters are enforced below in Dart.
       snapshot = await _opportunities.get();
+      debugPrint(
+        '[FirebaseOpportunityService] Successfully fetched ${snapshot.docs.length} documents from "/opportunities"',
+      );
     } on FirebaseException catch (error, stackTrace) {
-      debugPrint('[OpportunityRepository] ${error.code}: ${error.message}');
+      debugPrint('[FirebaseOpportunityService] Primary query failed - ${error.code}: ${error.message}');
       debugPrintStack(stackTrace: stackTrace);
       rethrow;
     }
     final items = <OpportunityModel>[];
     for (final document in snapshot.docs) {
-      final opportunity = _fromSnapshot(document);
-      if (opportunity.status != OpportunityStatus.published) {
-        continue;
+      try {
+        final opportunity = _fromSnapshot(document);
+        if (opportunity.status != OpportunityStatus.published) {
+          continue;
+        }
+        if (opportunity.deadline.isBefore(DateTime.now())) {
+          continue;
+        }
+        items.add(await _withStudentState(opportunity));
+      } catch (e, stackTrace) {
+        debugPrint(
+          '[FirebaseOpportunityService] Failed processing doc ${document.id}: $e',
+        );
+        debugPrintStack(stackTrace: stackTrace);
+        rethrow;
       }
-      if (opportunity.deadline.isBefore(DateTime.now())) {
-        continue;
-      }
-      items.add(await _withStudentState(opportunity));
     }
     if (!items.any((item) => item.isScholarship)) {
       final fallbackScholarships = await MockOpportunityService()
@@ -298,17 +313,39 @@ class FirebaseOpportunityService implements OpportunityService {
 
   Future<OpportunityModel> _withStudentState(OpportunityModel item) async {
     final user = _auth.currentUser;
-    if (user == null) return item;
+    if (user == null) {
+      debugPrint(
+        '[FirebaseOpportunityService] _withStudentState(${item.id}): No user authenticated, skipping secondary reads.',
+      );
+      return item;
+    }
+    debugPrint(
+      '[FirebaseOpportunityService] _withStudentState(${item.id}): Starting secondary reads for user=${user.uid}',
+    );
+    debugPrint(
+      '[FirebaseOpportunityService] [Secondary Read 1] Querying /users/${user.uid}/savedOpportunities/${item.id}',
+    );
     final saved = await _firestore
         .collection('users')
         .doc(user.uid)
         .collection('savedOpportunities')
         .doc(item.id)
         .get();
+    debugPrint(
+      '[FirebaseOpportunityService] [Secondary Read 1] Result: exists=${saved.exists}',
+    );
+
+    debugPrint(
+      '[FirebaseOpportunityService] [Secondary Read 2] Querying /applications/${user.uid}_${item.id}',
+    );
     final application = await _applications.findForStudentAndOpportunity(
       user.uid,
       item.id,
     );
+    debugPrint(
+      '[FirebaseOpportunityService] [Secondary Read 2] Result: found=${application != null}',
+    );
+
     return item.copyWith(
       isSaved: saved.exists,
       isApplied: application != null,

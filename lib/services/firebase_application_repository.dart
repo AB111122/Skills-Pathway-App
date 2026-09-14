@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/application_model.dart';
 import '../models/notification_model.dart';
@@ -111,10 +112,22 @@ class FirebaseApplicationRepository implements ApplicationRepository {
     String opportunityId,
   ) async {
     _requireSignedIn();
-    final snapshot = await _applications
-        .doc('${studentId}_$opportunityId')
-        .get();
-    return snapshot.exists ? _fromSnapshot(snapshot) : null;
+    final path = 'applications/${studentId}_$opportunityId';
+    debugPrint(
+      '[FirebaseApplicationRepository] Reading document: "$path" (Auth UID: ${_auth.currentUser?.uid})',
+    );
+    try {
+      final snapshot = await _applications
+          .doc('${studentId}_$opportunityId')
+          .get();
+      return snapshot.exists ? _fromSnapshot(snapshot) : null;
+    } on FirebaseException catch (e, stackTrace) {
+      debugPrint(
+        '[FirebaseApplicationRepository] Error reading "$path" - ${e.code}: ${e.message}',
+      );
+      debugPrintStack(stackTrace: stackTrace);
+      rethrow;
+    }
   }
 
   void _requireSignedIn() {

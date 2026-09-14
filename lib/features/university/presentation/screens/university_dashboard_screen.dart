@@ -260,13 +260,20 @@ class _UniversityDashboardScreenState
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final isWide = constraints.maxWidth > 600;
+                    final crossAxisCount = isWide ? 4 : 2;
+                    final cardWidth =
+                        (constraints.maxWidth - ((crossAxisCount - 1) * 12)) /
+                        crossAxisCount;
+                    final cardHeight =
+                        constraints.maxWidth < 360 ? 128.0 : 116.0;
+                    final ratio = (cardWidth / cardHeight).clamp(0.95, 1.8);
                     return GridView.count(
-                      crossAxisCount: isWide ? 4 : 2,
+                      crossAxisCount: crossAxisCount,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      childAspectRatio: isWide ? 1.4 : 1.25,
+                      childAspectRatio: ratio,
                       children: [
                         _MetricCard(
                           icon: Icons.work_outline_rounded,
@@ -312,13 +319,20 @@ class _UniversityDashboardScreenState
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final isWide = constraints.maxWidth > 600;
+                    final crossAxisCount = isWide ? 3 : 2;
+                    final cardWidth =
+                        (constraints.maxWidth - ((crossAxisCount - 1) * 12)) /
+                        crossAxisCount;
+                    final cardHeight =
+                        constraints.maxWidth < 360 ? 128.0 : 116.0;
+                    final ratio = (cardWidth / cardHeight).clamp(0.95, 1.8);
                     return GridView.count(
-                      crossAxisCount: isWide ? 3 : 2,
+                      crossAxisCount: crossAxisCount,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      childAspectRatio: isWide ? 1.6 : 1.35,
+                      childAspectRatio: ratio,
                       children: [
                         _ActionCard(
                           icon: Icons.add_business_rounded,
@@ -431,39 +445,46 @@ class _MetricCard extends StatelessWidget {
                 ),
                 child: Icon(icon, color: iconColor, size: 20),
               ),
-              Text(
-                value,
-                style: AppTextStyles.displayMedium(context).copyWith(
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: -0.5,
+              Flexible(
+                child: Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.displayMedium(context).copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.5,
+                  ),
                 ),
               ),
             ],
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.labelMedium(
-                  context,
-                ).copyWith(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtext,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.bodySmall(
-                  context,
-                  color: isDark
-                      ? AppColors.textMutedDark
-                      : AppColors.textSecondaryLight,
-                ).copyWith(fontSize: 11),
-              ),
-            ],
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.labelMedium(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtext,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.bodySmall(
+                    context,
+                    color: isDark
+                        ? AppColors.textMutedDark
+                        : AppColors.textSecondaryLight,
+                  ).copyWith(fontSize: 11),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -533,28 +554,31 @@ class _ActionCard extends StatelessWidget {
                 ),
               ],
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.titleSmall(context),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.bodySmall(
-                    context,
-                    color: isDark
-                        ? AppColors.textMutedDark
-                        : AppColors.textSecondaryLight,
-                  ).copyWith(fontSize: 11),
-                ),
-              ],
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.titleSmall(context),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.bodySmall(
+                      context,
+                      color: isDark
+                          ? AppColors.textMutedDark
+                          : AppColors.textSecondaryLight,
+                    ).copyWith(fontSize: 11),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

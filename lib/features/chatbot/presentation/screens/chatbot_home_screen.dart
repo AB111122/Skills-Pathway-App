@@ -85,9 +85,13 @@ class _ChatbotHomeScreenState extends State<ChatbotHomeScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            Text(
-              'AI Career Assistant',
-              style: AppTextStyles.titleMedium(context),
+            Flexible(
+              child: Text(
+                'AI Career Assistant',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.titleMedium(context),
+              ),
             ),
           ],
         ),
@@ -117,71 +121,94 @@ class _ChatbotHomeScreenState extends State<ChatbotHomeScreen> {
 
               // Quick Action Grid
               Expanded(
-                child: GridView.builder(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 1.55,
-                  ),
-                  itemCount: quickActions.length,
-                  itemBuilder: (context, index) {
-                    final item = quickActions[index];
-                    return InkWell(
-                      onTap: () {
-                        context.push(
-                          '/chatbot/conversation',
-                          extra: item['title'] as String,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final width = constraints.maxWidth;
+                    final crossAxisCount = width > 700 ? 3 : 2;
+                    final cardWidth =
+                        (width - ((crossAxisCount - 1) * 12)) / crossAxisCount;
+                    final cardHeight = width < 360 ? 152.0 : 138.0;
+                    final childAspectRatio =
+                        (cardWidth / cardHeight).clamp(0.85, 1.8);
+
+                    return GridView.builder(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      gridDelegate:
+                          SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: crossAxisCount,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            childAspectRatio: childAspectRatio,
+                          ),
+                      itemCount: quickActions.length,
+                      itemBuilder: (context, index) {
+                        final item = quickActions[index];
+                        return InkWell(
+                          onTap: () {
+                            context.push(
+                              '/chatbot/conversation',
+                              extra: item['title'] as String,
+                            );
+                          },
+                          borderRadius: AppDimensions.roundedLarge,
+                          child: Container(
+                            padding: const EdgeInsets.all(AppDimensions.p12),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? AppColors.surfaceDark
+                                  : Colors.white,
+                              borderRadius: AppDimensions.roundedLarge,
+                              border: Border.all(
+                                color: isDark
+                                    ? AppColors.cardBorderDark
+                                    : AppColors.cardBorderLight,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: AppDimensions.roundedMedium,
+                                  ),
+                                  child: Icon(
+                                    item['icon'] as IconData,
+                                    color: AppColors.primary,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  item['title'] as String,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyles.titleSmall(context),
+                                ),
+                                const SizedBox(height: 2),
+                                Expanded(
+                                  child: Text(
+                                    item['desc'] as String,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTextStyles.bodySmall(
+                                      context,
+                                      color: isDark
+                                          ? AppColors.textMutedDark
+                                          : AppColors.textSecondaryLight,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         );
                       },
-                      borderRadius: AppDimensions.roundedLarge,
-                      child: Container(
-                        padding: const EdgeInsets.all(AppDimensions.p16),
-                        decoration: BoxDecoration(
-                          color: isDark ? AppColors.surfaceDark : Colors.white,
-                          borderRadius: AppDimensions.roundedLarge,
-                          border: Border.all(
-                            color: isDark
-                                ? AppColors.cardBorderDark
-                                : AppColors.cardBorderLight,
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.1),
-                                borderRadius: AppDimensions.roundedMedium,
-                              ),
-                              child: Icon(
-                                item['icon'] as IconData,
-                                color: AppColors.primary,
-                                size: 20,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              item['title'] as String,
-                              style: AppTextStyles.titleSmall(context),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              item['desc'] as String,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextStyles.bodySmall(
-                                context,
-                                color: isDark
-                                    ? AppColors.textMutedDark
-                                    : AppColors.textSecondaryLight,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                     );
                   },
                 ),

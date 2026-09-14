@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../../../models/opportunity_filter_model.dart';
@@ -7,6 +9,7 @@ import '../../../../models/opportunity_model.dart';
 import '../../../../services/firebase_opportunity_service.dart';
 import '../../../../services/mock_opportunity_service.dart';
 import '../../../../services/opportunity_service.dart';
+import '../../../authentication/presentation/controllers/auth_controller.dart';
 import '../../domain/opportunity_state.dart';
 
 final opportunityServiceProvider = Provider<OpportunityService>((ref) {
@@ -18,14 +21,49 @@ final opportunityServiceProvider = Provider<OpportunityService>((ref) {
 final opportunityControllerProvider =
     StateNotifierProvider<OpportunityController, OpportunityState>((ref) {
       final service = ref.watch(opportunityServiceProvider);
-      return OpportunityController(service);
+      final controller = OpportunityController(service);
+      ref.listen(authControllerProvider, (previous, next) {
+        if (next.isAuthenticated &&
+            previous?.currentUser?.id != next.currentUser?.id) {
+          controller.loadOpportunities();
+        }
+      });
+      return controller;
     });
 
 class OpportunityController extends StateNotifier<OpportunityState> {
   final OpportunityService _service;
+  StreamSubscription? _authSubscription;
 
   OpportunityController(this._service) : super(const OpportunityState()) {
-    loadOpportunities();
+    if (Firebase.apps.isNotEmpty) {
+      final auth = FirebaseAuth.instance;
+      if (auth.currentUser != null) {
+        loadOpportunities();
+      } else {
+        debugPrint(
+          '[OpportunityController] No user session yet. Deferring query until authStateChanges emits non-null user.',
+        );
+        _authSubscription = auth.authStateChanges().listen((user) {
+          if (user != null) {
+            debugPrint(
+              '[OpportunityController] Auth session restored (UID: ${user.uid}). Loading opportunities.',
+            );
+            loadOpportunities();
+            _authSubscription?.cancel();
+            _authSubscription = null;
+          }
+        });
+      }
+    } else {
+      loadOpportunities();
+    }
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 
   /// Loads opportunities based on current filter state
@@ -38,11 +76,12 @@ class OpportunityController extends StateNotifier<OpportunityState> {
         opportunities: items,
         errorMessage: null,
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('[OpportunityController] load opportunities failed: $e');
+      debugPrintStack(stackTrace: stackTrace);
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Unable to load opportunities. Please try again.',
+        errorMessage: 'Unable to load opportunities: $e',
       );
     }
   }
@@ -82,11 +121,12 @@ class OpportunityController extends StateNotifier<OpportunityState> {
       final item = await _service.getOpportunityById(id);
       state = state.copyWith(isLoading: false, selectedOpportunity: item);
       return item;
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('[OpportunityController] load opportunity failed: $e');
+      debugPrintStack(stackTrace: stackTrace);
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Unable to load opportunity details. Please try again.',
+        errorMessage: 'Unable to load opportunity details: $e',
       );
       return null;
     }

@@ -289,13 +289,21 @@ class UniversityProfileScreen extends ConsumerWidget {
                     LayoutBuilder(
                       builder: (context, constraints) {
                         final isWide = constraints.maxWidth > 600;
+                        final crossAxisCount = isWide ? 3 : 3;
+                        final cardWidth =
+                            (constraints.maxWidth -
+                                ((crossAxisCount - 1) * 10)) /
+                            crossAxisCount;
+                        final cardHeight =
+                            constraints.maxWidth < 360 ? 96.0 : 88.0;
+                        final ratio = (cardWidth / cardHeight).clamp(0.85, 1.5);
                         return GridView.count(
-                          crossAxisCount: isWide ? 3 : 3,
+                          crossAxisCount: crossAxisCount,
                           crossAxisSpacing: 10,
                           mainAxisSpacing: 10,
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          childAspectRatio: isWide ? 1.4 : 1.05,
+                          childAspectRatio: ratio,
                           children: [
                             _StatBox(
                               label: 'Opportunities',
@@ -395,19 +403,25 @@ class _DetailRow extends StatelessWidget {
         children: [
           Icon(icon, size: 18, color: AppColors.primary),
           const SizedBox(width: 10),
-          Text(
-            '$label: ',
-            style: AppTextStyles.bodySmall(
-              context,
-              color: isDark
-                  ? AppColors.textMutedDark
-                  : AppColors.textSecondaryLight,
-            ),
-          ),
           Expanded(
-            child: Text(
-              value,
-              style: AppTextStyles.labelMedium(context),
+            child: RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: '$label: ',
+                    style: AppTextStyles.bodySmall(
+                      context,
+                      color: isDark
+                          ? AppColors.textMutedDark
+                          : AppColors.textSecondaryLight,
+                    ),
+                  ),
+                  TextSpan(
+                    text: value,
+                    style: AppTextStyles.labelMedium(context),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -451,13 +465,18 @@ class _StatBox extends StatelessWidget {
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 22, color: color),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: AppTextStyles.titleMedium(context).copyWith(
-              fontWeight: FontWeight.bold,
+          Icon(icon, size: 20, color: color),
+          const SizedBox(height: 4),
+          Flexible(
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.titleMedium(context).copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(height: 2),

@@ -134,6 +134,8 @@ class CustomButton extends StatelessWidget {
 
     final textWidget = Text(
       text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
       style: AppTextStyles.labelLarge(context, color: fgColor),
     );
 
@@ -145,8 +147,8 @@ class CustomButton extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: isIconTrailing
-          ? [textWidget, const SizedBox(width: 8), iconWidget]
-          : [iconWidget, const SizedBox(width: 8), textWidget],
+          ? [Flexible(child: textWidget), const SizedBox(width: 8), iconWidget]
+          : [iconWidget, const SizedBox(width: 8), Flexible(child: textWidget)],
     );
   }
 }
