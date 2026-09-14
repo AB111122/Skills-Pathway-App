@@ -10,8 +10,22 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    debugPrint('[Startup] dotenv load notice: $e');
+  }
+
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
+  } catch (e) {
+    debugPrint('[Startup] Firebase initialization error: $e');
+  }
+
   runApp(const ProviderScope(child: SkillsPathwayApp()));
 }
 
