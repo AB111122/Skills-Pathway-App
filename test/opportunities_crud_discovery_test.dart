@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:skills_pathway_app/models/opportunity_filter_model.dart';
 import 'package:skills_pathway_app/models/opportunity_model.dart';
@@ -66,6 +67,20 @@ void main() {
       expect(firestoreData['createdBy'], 'org_profile_test');
       expect(firestoreData['category'], 'Research');
       expect(firestoreData['status'], 'published');
+      expect(firestoreData['deadline'], isA<Timestamp>());
+      expect(firestoreData['shortDescription'], created.shortDescription);
+      expect(firestoreData['fullDescription'], created.fullDescription);
+      expect(firestoreData['officialUrl'], created.officialUrl);
+
+      final restored = FirestoreSerializers.opportunityFromMap(
+        firestoreData,
+        id: created.id,
+      );
+      expect(restored.organizationId, created.organizationId);
+      expect(restored.createdBy, created.createdBy);
+      expect(restored.type, created.type);
+      expect(restored.status, OpportunityStatus.published);
+      expect(restored.deadline.toUtc(), created.deadline.toUtc());
 
       final studentOpportunities = await opportunityService.getOpportunities();
       final visible = studentOpportunities.firstWhere(
