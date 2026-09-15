@@ -48,6 +48,35 @@ class FirebaseOpportunityService implements OpportunityService {
       debugPrintStack(stackTrace: stackTrace);
       rethrow;
     }
+    Set<String> savedOpportunityIds = {};
+    Map<String, DateTime?> appliedOpportunityDates = {};
+    final user = _auth.currentUser;
+    if (user != null) {
+      try {
+        final savedSnapshot = await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('savedOpportunities')
+            .get();
+        savedOpportunityIds = savedSnapshot.docs.map((doc) => doc.id).toSet();
+      } catch (e) {
+        debugPrint(
+          '[FirebaseOpportunityService] Error fetching saved opportunities: $e',
+        );
+      }
+
+      try {
+        final applications = await _applications.forStudent(user.uid);
+        for (final app in applications) {
+          appliedOpportunityDates[app.opportunityId] = app.applicationDate;
+        }
+      } catch (e) {
+        debugPrint(
+          '[FirebaseOpportunityService] Error fetching student applications: $e',
+        );
+      }
+    }
+
     final items = <OpportunityModel>[];
     for (final document in snapshot.docs) {
       try {
@@ -58,13 +87,21 @@ class FirebaseOpportunityService implements OpportunityService {
         if (opportunity.deadline.isBefore(DateTime.now())) {
           continue;
         }
-        items.add(await _withStudentState(opportunity));
+        final isSaved = savedOpportunityIds.contains(opportunity.id);
+        final isApplied = appliedOpportunityDates.containsKey(opportunity.id);
+        final appliedAt = appliedOpportunityDates[opportunity.id];
+        items.add(
+          opportunity.copyWith(
+            isSaved: isSaved,
+            isApplied: isApplied,
+            appliedAt: appliedAt,
+          ),
+        );
       } catch (e, stackTrace) {
         debugPrint(
           '[FirebaseOpportunityService] Failed processing doc ${document.id}: $e',
         );
         debugPrintStack(stackTrace: stackTrace);
-        rethrow;
       }
     }
     if (!items.any((item) => item.isScholarship)) {
@@ -322,32 +359,36 @@ class FirebaseOpportunityService implements OpportunityService {
     debugPrint(
       '[FirebaseOpportunityService] _withStudentState(${item.id}): Starting secondary reads for user=${user.uid}',
     );
-    debugPrint(
-      '[FirebaseOpportunityService] [Secondary Read 1] Querying /users/${user.uid}/savedOpportunities/${item.id}',
-    );
-    final saved = await _firestore
-        .collection('users')
-        .doc(user.uid)
-        .collection('savedOpportunities')
-        .doc(item.id)
-        .get();
-    debugPrint(
-      '[FirebaseOpportunityService] [Secondary Read 1] Result: exists=${saved.exists}',
-    );
 
-    debugPrint(
-      '[FirebaseOpportunityService] [Secondary Read 2] Querying /applications/${user.uid}_${item.id}',
-    );
-    final application = await _applications.findForStudentAndOpportunity(
-      user.uid,
-      item.id,
-    );
-    debugPrint(
-      '[FirebaseOpportunityService] [Secondary Read 2] Result: found=${application != null}',
-    );
+    bool isSaved = false;
+    try {
+      final saved = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('savedOpportunities')
+          .doc(item.id)
+          .get();
+      isSaved = saved.exists;
+    } catch (e) {
+      debugPrint(
+        '[FirebaseOpportunityService] [Secondary Read 1] Failed reading savedOpportunities/${item.id}: $e',
+      );
+    }
+
+    ApplicationModel? application;
+    try {
+      application = await _applications.findForStudentAndOpportunity(
+        user.uid,
+        item.id,
+      );
+    } catch (e) {
+      debugPrint(
+        '[FirebaseOpportunityService] [Secondary Read 2] Failed reading application for ${item.id}: $e',
+      );
+    }
 
     return item.copyWith(
-      isSaved: saved.exists,
+      isSaved: isSaved,
       isApplied: application != null,
       appliedAt: application?.applicationDate,
     );

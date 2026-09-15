@@ -24,10 +24,13 @@ class FirebaseApplicationRepository implements ApplicationRepository {
   @override
   Future<ApplicationModel> create(ApplicationModel application) async {
     _requireSignedIn();
+    final existing = await findForStudentAndOpportunity(
+      application.studentId,
+      application.opportunityId,
+    );
+    if (existing != null) return existing;
     final documentId = '${application.studentId}_${application.opportunityId}';
     final reference = _applications.doc(documentId);
-    final existing = await reference.get();
-    if (existing.exists) return _fromSnapshot(existing);
     await reference.set({
       ...FirestoreSerializers.applicationToMap(application),
       'id': documentId,
@@ -114,13 +117,17 @@ class FirebaseApplicationRepository implements ApplicationRepository {
     _requireSignedIn();
     final path = 'applications/${studentId}_$opportunityId';
     debugPrint(
-      '[FirebaseApplicationRepository] Reading document: "$path" (Auth UID: ${_auth.currentUser?.uid})',
+      '[FirebaseApplicationRepository] Querying application for: "$path" (Auth UID: ${_auth.currentUser?.uid})',
     );
     try {
       final snapshot = await _applications
-          .doc('${studentId}_$opportunityId')
+          .where('studentId', isEqualTo: studentId)
+          .where('opportunityId', isEqualTo: opportunityId)
+          .limit(1)
           .get();
-      return snapshot.exists ? _fromSnapshot(snapshot) : null;
+      return snapshot.docs.isNotEmpty
+          ? _fromSnapshot(snapshot.docs.first)
+          : null;
     } on FirebaseException catch (e, stackTrace) {
       debugPrint(
         '[FirebaseApplicationRepository] Error reading "$path" - ${e.code}: ${e.message}',
