@@ -70,12 +70,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         title: Text('My Profile', style: AppTextStyles.titleLarge(context)),
         actions: [
           IconButton(
+            tooltip: 'Settings & Preferences',
             icon: const Icon(Icons.settings_outlined),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Settings & Preferences')),
-              );
-            },
+            onPressed: () => context.push(RouteNames.settings),
           ),
         ],
       ),

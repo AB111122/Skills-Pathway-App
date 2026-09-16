@@ -33,4 +33,6 @@ class RouteNames {
   static const String createPost = '/network/create';
   static const String submitListing = '/listings/submit';
   static const String notifications = '/notifications';
+  static const String settings = '/settings';
+  static const String editProfile = '/settings/edit-profile';
 }

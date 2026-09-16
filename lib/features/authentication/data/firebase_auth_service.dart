@@ -186,12 +186,65 @@ class FirebaseAuthService implements AuthService {
   }
 
   @override
+  Future<StudentProfileModel> updateStudentProfile(
+    String userId,
+    StudentProfileModel profile,
+  ) async {
+    try {
+      await _users.doc(userId).update({
+        'name': profile.fullName,
+        'studentProfile': profile.toJson(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      final updated = await getStudentProfile(userId);
+      if (updated == null) throw StateError('Student profile not found.');
+      return updated;
+    } on FirebaseException catch (error) {
+      throw Exception(_friendlyAuthMessage(error.code));
+    }
+  }
+
+  @override
   Future<OrganizationModel?> getOrganizationProfile(String userId) async {
     final snapshot = await _users.doc(userId).get();
     final data = snapshot.data();
     final profile = data?['organizationProfile'];
     if (profile is! Map) return null;
     return _organizationProfileFromMap(Map<String, dynamic>.from(profile));
+  }
+
+  @override
+  Future<OrganizationModel> updateOrganizationProfile(
+    String userId,
+    OrganizationModel profile,
+  ) async {
+    try {
+      await _users.doc(userId).update({
+        'name': profile.orgName,
+        'organizationProfile': profile.toJson(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      final updated = await getOrganizationProfile(userId);
+      if (updated == null) throw StateError('Organization profile not found.');
+      return updated;
+    } on FirebaseException catch (error) {
+      throw Exception(_friendlyAuthMessage(error.code));
+    }
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    try {
+      await _users.doc(user.uid).delete();
+      await user.delete();
+    } on FirebaseAuthException catch (error) {
+      if (error.code == 'requires-recent-login') {
+        throw Exception('Please sign in again before deleting your account.');
+      }
+      throw Exception(_friendlyAuthMessage(error.code));
+    }
   }
 
   Future<UserModel> _loadUser(User firebaseUser) async {

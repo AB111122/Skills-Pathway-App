@@ -68,6 +68,11 @@ class UniversityProfileScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
+            tooltip: 'Settings & Preferences',
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => context.push(RouteNames.settings),
+          ),
+          IconButton(
             tooltip: 'Sign Out',
             icon: const Icon(Icons.logout_rounded),
             onPressed: () => _logout(context, ref),

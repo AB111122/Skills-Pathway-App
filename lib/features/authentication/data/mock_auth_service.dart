@@ -39,7 +39,16 @@ abstract class AuthService {
     String userId,
     List<String> skills,
   );
+  Future<StudentProfileModel> updateStudentProfile(
+    String userId,
+    StudentProfileModel profile,
+  );
   Future<OrganizationModel?> getOrganizationProfile(String userId);
+  Future<OrganizationModel> updateOrganizationProfile(
+    String userId,
+    OrganizationModel profile,
+  );
+  Future<void> deleteAccount();
 }
 
 /// [MOCK IMPLEMENTATION]
@@ -261,7 +270,40 @@ class MockAuthService implements AuthService {
   }
 
   @override
+  Future<StudentProfileModel> updateStudentProfile(
+    String userId,
+    StudentProfileModel profile,
+  ) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    _currentStudentProfile = profile;
+    if (_currentUser != null) {
+      _currentUser = _currentUser!.copyWith(name: profile.fullName);
+      _authStateController.add(_currentUser);
+    }
+    return profile;
+  }
+
+  @override
   Future<OrganizationModel?> getOrganizationProfile(String userId) async {
     return _currentOrgProfile ?? _mockOrgProfile;
+  }
+
+  @override
+  Future<OrganizationModel> updateOrganizationProfile(
+    String userId,
+    OrganizationModel profile,
+  ) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    _currentOrgProfile = profile;
+    if (_currentUser != null) {
+      _currentUser = _currentUser!.copyWith(name: profile.orgName);
+      _authStateController.add(_currentUser);
+    }
+    return profile;
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    await logout();
   }
 }

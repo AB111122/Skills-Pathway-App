@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 
+import '../../../../models/organization_model.dart';
+import '../../../../models/student_profile_model.dart';
 import '../../../../models/user_model.dart';
 import '../../domain/auth_state.dart';
 import '../../data/firebase_auth_service.dart';
@@ -201,6 +203,64 @@ class AuthController extends StateNotifier<AuthState> {
     try {
       await _authService.sendPasswordReset(email);
       state = state.copyWith(isLoading: false);
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: _friendlyError(e));
+      return false;
+    }
+  }
+
+  Future<bool> updateStudentProfile(StudentProfileModel profile) async {
+    final userId = state.currentUser?.id;
+    if (userId == null) return false;
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final updated = await _authService.updateStudentProfile(userId, profile);
+      state = state.copyWith(
+        isLoading: false,
+        studentProfile: updated,
+        currentUser: state.currentUser?.copyWith(name: updated.fullName),
+        errorMessage: null,
+      );
+      return true;
+    } catch (error) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: _friendlyError(error),
+      );
+      return false;
+    }
+  }
+
+  Future<bool> updateOrganizationProfile(OrganizationModel profile) async {
+    final userId = state.currentUser?.id;
+    if (userId == null) return false;
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final updated = await _authService.updateOrganizationProfile(userId, profile);
+      state = state.copyWith(
+        isLoading: false,
+        organizationProfile: updated,
+        currentUser: state.currentUser?.copyWith(name: updated.orgName),
+        errorMessage: null,
+      );
+      return true;
+    } catch (error) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: _friendlyError(error),
+      );
+      return false;
+    }
+  }
+
+  /// Delete Account
+  Future<bool> deleteAccount() async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      await _authService.deleteAccount();
+      _sessionVersion++;
+      state = const AuthState();
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: _friendlyError(e));

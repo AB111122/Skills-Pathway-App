@@ -19,6 +19,8 @@ import '../../features/opportunities/presentation/screens/opportunity_detail_scr
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/profile/presentation/screens/student_applications_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
+import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/settings/presentation/screens/edit_profile_screen.dart';
 import '../../features/network/presentation/screens/create_post_screen.dart';
 import '../../features/network/presentation/screens/post_details_screen.dart';
 import '../../models/user_model.dart';
@@ -193,6 +195,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/chatbot/conversation',
         builder: (context, state) =>
             AiChatScreen(starter: state.extra as String?),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: RouteNames.settings,
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: RouteNames.editProfile,
+        builder: (context, state) => const EditProfileScreen(),
       ),
 
       ShellRoute(
