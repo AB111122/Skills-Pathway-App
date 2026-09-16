@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'core/constants/app_strings.dart';
+import 'core/notifications/fcm_notification_service.dart';
 import 'core/routing/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
@@ -25,6 +26,10 @@ void main() async {
     }
   } catch (e) {
     debugPrint('[Startup] Firebase initialization error: $e');
+  }
+
+  if (Firebase.apps.isNotEmpty) {
+    await FcmNotificationService.instance.initialize();
   }
 
   runApp(const ProviderScope(child: SkillsPathwayApp()));
