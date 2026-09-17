@@ -77,7 +77,7 @@ class HomeDashboardScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 SizedBox(
-                  height: 255,
+                  height: 275,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: upcomingDeadlines.length,
@@ -265,10 +265,15 @@ class HomeDashboardScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                AppStrings.profileCompletionTitle,
-                style: AppTextStyles.titleSmall(context),
+              Expanded(
+                child: Text(
+                  AppStrings.profileCompletionTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.titleSmall(context),
+                ),
               ),
+              const SizedBox(width: 8),
               Text(
                 '${(progress * 100).toInt()}%',
                 style: AppTextStyles.labelLarge(
@@ -362,11 +367,15 @@ class HomeDashboardScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
-                AppStrings.aiAssistantBannerTitle,
-                style: AppTextStyles.titleMedium(
-                  context,
-                  color: Colors.white,
+              Expanded(
+                child: Text(
+                  AppStrings.aiAssistantBannerTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.titleMedium(
+                    context,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ],
@@ -455,22 +464,28 @@ class HomeDashboardScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.trending_up_rounded,
-                    color: AppColors.primaryMint,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    AppStrings.marketPulse,
-                    style: AppTextStyles.titleSmall(context),
-                  ),
-                ],
+              Expanded(
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.trending_up_rounded,
+                      color: AppColors.primaryMint,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        AppStrings.marketPulse,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.titleSmall(context),
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               const StatBadge(
                 text: 'Live Demand',
                 style: StatBadgeStyle.success,
@@ -524,12 +539,17 @@ class HomeDashboardScreen extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              skill,
-              style: AppTextStyles.labelSmall(context).copyWith(
-                fontWeight: FontWeight.w600,
+            Expanded(
+              child: Text(
+                skill,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.labelSmall(context).copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
+            const SizedBox(width: 8),
             Text(
               label,
               style: AppTextStyles.labelSmall(
@@ -573,9 +593,13 @@ class HomeDashboardScreen extends ConsumerWidget {
                 size: 20,
               ),
               const SizedBox(width: 8),
-              Text(
-                'Student Community Buzz',
-                style: AppTextStyles.titleSmall(context),
+              Expanded(
+                child: Text(
+                  'Student Community Buzz',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.titleSmall(context),
+                ),
               ),
             ],
           ),
@@ -587,13 +611,16 @@ class HomeDashboardScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            alignment: WrapAlignment.spaceBetween,
             children: [
               const StatBadge(
                 text: 'r/Scholarships',
                 style: StatBadgeStyle.primary,
               ),
-              const SizedBox(width: 8),
               Text(
                 '24 comments • 3h ago',
                 style: AppTextStyles.labelSmall(
@@ -603,9 +630,13 @@ class HomeDashboardScreen extends ConsumerWidget {
                       : AppColors.textSecondaryLight,
                 ),
               ),
-              const Spacer(),
               TextButton(
                 onPressed: () => context.go(RouteNames.network),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
                 child: const Text('Join Discussion'),
               ),
             ],
