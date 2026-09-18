@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/utils/url_helper.dart';
 import '../models/opportunity_filter_model.dart';
 import '../models/opportunity_model.dart';
 import '../models/application_model.dart';
@@ -728,7 +729,7 @@ class MockOpportunityService implements OpportunityService {
       stipendOrFunding: 'See opportunity details',
       shortDescription: description,
       fullDescription: description,
-      officialUrl: applicationUrl,
+      officialUrl: UrlHelper.normalizeUrl(applicationUrl),
       requiredSkills: const [],
       eligibleFields: const [],
       eligibilityCriteria: eligibility.isEmpty ? const [] : [eligibility],
@@ -748,7 +749,10 @@ class MockOpportunityService implements OpportunityService {
     if (_mockDatabase[index].organizationId != organizationId) {
       throw StateError('You can only manage your own opportunities.');
     }
-    _mockDatabase[index] = updated;
+    final normalized = updated.copyWith(
+      officialUrl: UrlHelper.normalizeUrl(updated.officialUrl),
+    );
+    _mockDatabase[index] = normalized;
     await _persist();
   }
 

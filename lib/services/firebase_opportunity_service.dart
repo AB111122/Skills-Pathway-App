@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
+import '../core/utils/url_helper.dart';
 import '../models/application_model.dart';
 import '../models/opportunity_filter_model.dart';
 import '../models/opportunity_model.dart';
@@ -280,7 +281,7 @@ class FirebaseOpportunityService implements OpportunityService {
       stipendOrFunding: 'See opportunity details',
       shortDescription: description,
       fullDescription: description,
-      officialUrl: applicationUrl,
+      officialUrl: UrlHelper.normalizeUrl(applicationUrl),
       requiredSkills: const [],
       eligibleFields: const [],
       eligibilityCriteria: eligibility.isEmpty ? const [] : [eligibility],
@@ -300,7 +301,10 @@ class FirebaseOpportunityService implements OpportunityService {
     OpportunityModel updated,
   ) async {
     _requireOrganization(organizationId);
-    await _opportunities.doc(updated.id).update(_toFirestore(updated));
+    final normalized = updated.copyWith(
+      officialUrl: UrlHelper.normalizeUrl(updated.officialUrl),
+    );
+    await _opportunities.doc(normalized.id).update(_toFirestore(normalized));
   }
 
   Future<void> closeUniversityOpportunity(

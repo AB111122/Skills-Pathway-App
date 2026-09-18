@@ -139,5 +139,22 @@ void main() {
       expect(find.text('Eligibility Requirements'), findsOneWidget);
       expect(find.text('One-Tap Apply'), findsOneWidget);
     });
+
+    testWidgets('OpportunityDetailScreen shows reminder tooltip on published listing',
+        (tester) async {
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(
+            home: OpportunityDetailScreen(opportunityId: 'opp_jazz_02'),
+          ),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+
+      final bellFinder = find.byTooltip('Set Deadline Reminder');
+      expect(bellFinder, findsOneWidget);
+    });
   });
 }

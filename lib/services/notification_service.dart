@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
@@ -22,12 +23,29 @@ class NotificationService {
 
   Future<List<NotificationModel>> getNotifications() async {
     if (Firebase.apps.isNotEmpty && _auth.currentUser != null) {
-      final snapshot = await _firestore
+      final currentUid = _auth.currentUser!.uid;
+      final query = _firestore
           .collection('notifications')
-          .where('recipientId', isEqualTo: _auth.currentUser!.uid)
-          .get();
-      return snapshot.docs.map(_fromFirestore).toList()
-        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          .where('recipientId', isEqualTo: currentUid);
+
+      debugPrint(
+        '[NotificationService] Executing query: collection("notifications").where("recipientId", isEqualTo: "$currentUid")',
+      );
+
+      try {
+        final snapshot = await query.get();
+        debugPrint(
+          '[NotificationService] getNotifications retrieved ${snapshot.docs.length} notifications for user $currentUid',
+        );
+        return snapshot.docs.map(_fromFirestore).toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      } catch (e, stackTrace) {
+        debugPrint(
+          '[NotificationService] Failed to fetch notifications for user $currentUid: $e',
+        );
+        debugPrintStack(stackTrace: stackTrace);
+        rethrow;
+      }
     }
     List<String> values;
     try {
@@ -66,9 +84,13 @@ class NotificationService {
       type: NotificationType.deadline,
     );
     if (Firebase.apps.isNotEmpty && _auth.currentUser != null) {
+      final currentUid = _auth.currentUser!.uid;
+      debugPrint(
+        '[NotificationService] scheduleNotification query: collection("notifications").where("recipientId", isEqualTo: "$currentUid")',
+      );
       final existing = await _firestore
           .collection('notifications')
-          .where('recipientId', isEqualTo: _auth.currentUser!.uid)
+          .where('recipientId', isEqualTo: currentUid)
           .get();
       for (final item in existing.docs) {
         final data = item.data();
@@ -79,7 +101,7 @@ class NotificationService {
       }
       await _firestore.collection('notifications').doc(notification.id).set({
         ...notification.toJson(),
-        'recipientId': _auth.currentUser!.uid,
+        'recipientId': currentUid,
         'createdAt': Timestamp.fromDate(notification.createdAt),
       });
       return;
@@ -97,53 +119,69 @@ class NotificationService {
 
   Future<void> evaluateDeadlineAlerts() async {
     if (Firebase.apps.isEmpty || _auth.currentUser == null) return;
-    final alerts = await _firestore
-        .collection('users')
-        .doc(_auth.currentUser!.uid)
-        .collection('deadlineReminders')
-        .get();
-    final now = DateTime.now();
-    for (final alert in alerts.docs) {
-      final data = alert.data();
-      final reminderDate = data['reminderDate'];
-      final deadline = data['deadline'];
-      final reminder = reminderDate is Timestamp
-          ? reminderDate.toDate()
-          : DateTime.tryParse(reminderDate as String? ?? '');
-      final due = deadline is Timestamp
-          ? deadline.toDate()
-          : DateTime.tryParse(deadline as String? ?? '');
-      if (reminder == null ||
-          due == null ||
-          now.isBefore(reminder) ||
-          !due.isAfter(now)) {
-        continue;
-      }
-      final existing = await _firestore
-          .collection('notifications')
-          .where('recipientId', isEqualTo: _auth.currentUser!.uid)
-          .get();
-      final alreadyCreated = existing.docs.any((item) {
-        final itemData = item.data();
-        return itemData['opportunityId'] == data['opportunityId'] &&
-            itemData['type'] == NotificationType.deadline.name;
-      });
-      if (alreadyCreated) continue;
-      await createForUser(
-        recipientId: _auth.currentUser!.uid,
-        title: 'Deadline approaching',
-        message: 'An opportunity you saved is approaching its deadline.',
-        type: NotificationType.deadline,
-        opportunityId: alert.id,
+    final currentUid = _auth.currentUser!.uid;
+    try {
+      debugPrint(
+        '[NotificationService] Evaluating deadline alerts for user: $currentUid',
       );
+      final alerts = await _firestore
+          .collection('users')
+          .doc(currentUid)
+          .collection('deadlineReminders')
+          .get();
+      final now = DateTime.now();
+      for (final alert in alerts.docs) {
+        final data = alert.data();
+        final reminderDate = data['reminderDate'];
+        final deadline = data['deadline'];
+        final reminder = reminderDate is Timestamp
+            ? reminderDate.toDate()
+            : DateTime.tryParse(reminderDate as String? ?? '');
+        final due = deadline is Timestamp
+            ? deadline.toDate()
+            : DateTime.tryParse(deadline as String? ?? '');
+        if (reminder == null ||
+            due == null ||
+            now.isBefore(reminder) ||
+            !due.isAfter(now)) {
+          continue;
+        }
+        debugPrint(
+          '[NotificationService] evaluateDeadlineAlerts checking existing: collection("notifications").where("recipientId", isEqualTo: "$currentUid")',
+        );
+        final existing = await _firestore
+            .collection('notifications')
+            .where('recipientId', isEqualTo: currentUid)
+            .get();
+        final alreadyCreated = existing.docs.any((item) {
+          final itemData = item.data();
+          return itemData['opportunityId'] == data['opportunityId'] &&
+              itemData['type'] == NotificationType.deadline.name;
+        });
+        if (alreadyCreated) continue;
+        await createForUser(
+          recipientId: currentUid,
+          title: 'Deadline approaching',
+          message: 'An opportunity you saved is approaching its deadline.',
+          type: NotificationType.deadline,
+          opportunityId: alert.id,
+        );
+      }
+    } catch (e, stackTrace) {
+      debugPrint('[NotificationService] Error evaluating deadline alerts: $e');
+      debugPrintStack(stackTrace: stackTrace);
     }
   }
 
   Future<void> cancelNotification(String opportunityId) async {
     if (Firebase.apps.isNotEmpty && _auth.currentUser != null) {
+      final currentUid = _auth.currentUser!.uid;
+      debugPrint(
+        '[NotificationService] cancelNotification query: collection("notifications").where("recipientId", isEqualTo: "$currentUid")',
+      );
       final existing = await _firestore
           .collection('notifications')
-          .where('recipientId', isEqualTo: _auth.currentUser!.uid)
+          .where('recipientId', isEqualTo: currentUid)
           .get();
       for (final item in existing.docs) {
         final data = item.data();
@@ -165,6 +203,7 @@ class NotificationService {
 
   Future<void> markRead(String id) async {
     if (Firebase.apps.isNotEmpty && _auth.currentUser != null) {
+      debugPrint('[NotificationService] markRead updating notification $id');
       await _firestore.collection('notifications').doc(id).update({
         'isRead': true,
       });
@@ -175,9 +214,13 @@ class NotificationService {
 
   Future<void> markAllRead() async {
     if (Firebase.apps.isNotEmpty && _auth.currentUser != null) {
+      final currentUid = _auth.currentUser!.uid;
+      debugPrint(
+        '[NotificationService] markAllRead query: collection("notifications").where("recipientId", isEqualTo: "$currentUid")',
+      );
       final snapshot = await _firestore
           .collection('notifications')
-          .where('recipientId', isEqualTo: _auth.currentUser!.uid)
+          .where('recipientId', isEqualTo: currentUid)
           .get();
       final batch = _firestore.batch();
       for (final item in snapshot.docs) {
@@ -211,6 +254,9 @@ class NotificationService {
       type: type,
     );
     if (Firebase.apps.isNotEmpty) {
+      debugPrint(
+        '[NotificationService] createForUser writing notification ${notification.id} for recipient $recipientId',
+      );
       await _firestore.collection('notifications').doc(notification.id).set({
         ...notification.toJson(),
         'recipientId': recipientId,
