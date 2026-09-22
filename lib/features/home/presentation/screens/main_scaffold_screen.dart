@@ -23,6 +23,8 @@ class MainScaffoldScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentIndex = navigationShell.currentIndex;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isNarrow = screenWidth < 380;
 
     return Scaffold(
       body: navigationShell,
@@ -47,9 +49,11 @@ class MainScaffoldScreen extends StatelessWidget {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            padding: EdgeInsets.symmetric(
+              horizontal: isNarrow ? 4 : 8,
+              vertical: 6,
+            ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildNavItem(
                   context: context,
@@ -58,6 +62,7 @@ class MainScaffoldScreen extends StatelessWidget {
                   icon: Icons.home_outlined,
                   selectedIcon: Icons.home_rounded,
                   label: 'Home',
+                  isNarrow: isNarrow,
                 ),
                 _buildNavItem(
                   context: context,
@@ -66,6 +71,7 @@ class MainScaffoldScreen extends StatelessWidget {
                   icon: Icons.work_outline_rounded,
                   selectedIcon: Icons.work_rounded,
                   label: 'Opportunities',
+                  isNarrow: isNarrow,
                 ),
                 _buildNavItem(
                   context: context,
@@ -74,6 +80,7 @@ class MainScaffoldScreen extends StatelessWidget {
                   icon: Icons.forum_outlined,
                   selectedIcon: Icons.forum_rounded,
                   label: 'Community',
+                  isNarrow: isNarrow,
                 ),
                 _buildNavItem(
                   context: context,
@@ -83,6 +90,7 @@ class MainScaffoldScreen extends StatelessWidget {
                   selectedIcon: Icons.auto_awesome_rounded,
                   label: 'AI Guide',
                   isHighlighted: true,
+                  isNarrow: isNarrow,
                 ),
                 _buildNavItem(
                   context: context,
@@ -91,6 +99,7 @@ class MainScaffoldScreen extends StatelessWidget {
                   icon: Icons.person_outline_rounded,
                   selectedIcon: Icons.person_rounded,
                   label: 'Profile',
+                  isNarrow: isNarrow,
                 ),
               ],
             ),
@@ -108,6 +117,7 @@ class MainScaffoldScreen extends StatelessWidget {
     required IconData selectedIcon,
     required String label,
     bool isHighlighted = false,
+    bool isNarrow = false,
   }) {
     final isSelected = index == currentIndex;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -116,40 +126,51 @@ class MainScaffoldScreen extends StatelessWidget {
     final inactiveColor =
         isDark ? AppColors.textMutedDark : AppColors.textSecondaryLight;
 
-    return InkWell(
-      onTap: () => _onTap(index),
-      borderRadius: BorderRadius.circular(16),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected && !isHighlighted
-              ? (isDark
-                  ? AppColors.primary.withValues(alpha: 0.15)
-                  : AppColors.primary.withValues(alpha: 0.08))
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isSelected ? selectedIcon : icon,
-              size: 22,
-              color: isSelected ? activeColor : inactiveColor,
-            ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: AppTextStyles.labelSmall(
-                context,
+    return Expanded(
+      child: InkWell(
+        onTap: () => _onTap(index),
+        borderRadius: BorderRadius.circular(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: EdgeInsets.symmetric(
+            horizontal: isNarrow ? 4 : 8,
+            vertical: 6,
+          ),
+          decoration: BoxDecoration(
+            color: isSelected && !isHighlighted
+                ? (isDark
+                    ? AppColors.primary.withValues(alpha: 0.15)
+                    : AppColors.primary.withValues(alpha: 0.08))
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                isSelected ? selectedIcon : icon,
+                size: isNarrow ? 20 : 22,
                 color: isSelected ? activeColor : inactiveColor,
-              ).copyWith(
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                fontSize: 11,
               ),
-            ),
-          ],
+              SizedBox(height: isNarrow ? 2 : 3),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.labelSmall(
+                    context,
+                    color: isSelected ? activeColor : inactiveColor,
+                  ).copyWith(
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    fontSize: isNarrow ? 10 : 11,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

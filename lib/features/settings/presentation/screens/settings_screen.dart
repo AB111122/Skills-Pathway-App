@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/routing/route_names.dart';
+import '../../../../core/utils/url_helper.dart';
 import '../../../../core/theme/text_styles.dart';
 import '../../../../core/theme/theme_controller.dart';
 import '../../../authentication/presentation/controllers/auth_controller.dart';
@@ -274,12 +274,11 @@ class SettingsScreen extends ConsumerWidget {
                 title: const Text('Email Support'),
                 subtitle: const Text('support@skillspathway.pk'),
                 trailing: const Icon(Icons.open_in_new_rounded, size: 18),
-                onTap: () async {
-                  final uri = Uri.parse('mailto:support@skillspathway.pk?subject=Skills%20Pathway%20Support');
-                  if (await canLaunchUrl(uri)) {
-                    await launchUrl(uri);
-                  }
-                },
+                onTap: () => UrlHelper.launchExternalUrl(
+                  context,
+                  'mailto:support@skillspathway.pk?subject=Skills%20Pathway%20Support',
+                  failureMessage: "Couldn't open email client.",
+                ),
               ),
               const Divider(height: 24),
               ListTile(
@@ -295,12 +294,11 @@ class SettingsScreen extends ConsumerWidget {
                 title: const Text('Pakistan Support Helpline'),
                 subtitle: const Text('+92 51 111-754557 (9 AM - 6 PM PKT)'),
                 trailing: const Icon(Icons.phone_in_talk_rounded, size: 18),
-                onTap: () async {
-                  final uri = Uri.parse('tel:+9251111754557');
-                  if (await canLaunchUrl(uri)) {
-                    await launchUrl(uri);
-                  }
-                },
+                onTap: () => UrlHelper.launchExternalUrl(
+                  context,
+                  'tel:+9251111754557',
+                  failureMessage: "Couldn't open dialer.",
+                ),
               ),
               const Divider(height: 24),
               ListTile(

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/theme/text_styles.dart';
+import '../../../../core/utils/url_helper.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/verified_badge.dart';
 import '../../../../models/opportunity_model.dart';
@@ -19,44 +19,33 @@ class ApplyConfirmationDialog extends StatelessWidget {
   });
 
   Future<void> _launchUrl(BuildContext context) async {
-    final uri = Uri.parse(opportunity.officialUrl);
-    try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        await launchUrl(uri, mode: LaunchMode.platformDefault);
-      }
-      onApplied();
-      if (context.mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.primaryDark,
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_rounded, color: AppColors.primaryMint),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Marked as "Applied" in your local profile tracker!',
-                    style: AppTextStyles.labelMedium(context, color: Colors.white),
-                  ),
+    final launched = await UrlHelper.launchExternalUrl(
+      context,
+      opportunity.officialUrl,
+    );
+    if (!launched) return;
+
+    onApplied();
+    if (context.mounted) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.primaryDark,
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle_rounded, color: AppColors.primaryMint),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Marked as "Applied" in your local profile tracker!',
+                  style: AppTextStyles.labelMedium(context, color: Colors.white),
                 ),
-              ],
-            ),
-            duration: const Duration(seconds: 3),
+              ),
+            ],
           ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.error,
-            content: Text('Could not open portal link: $e'),
-          ),
-        );
-      }
+          duration: const Duration(seconds: 3),
+        ),
+      );
     }
   }
 

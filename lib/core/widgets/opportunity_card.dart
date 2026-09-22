@@ -51,7 +51,9 @@ class OpportunityCard extends StatelessWidget {
           borderRadius: AppDimensions.roundedLarge,
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(AppDimensions.p16),
+            padding: EdgeInsets.all(
+              isHorizontal ? AppDimensions.p12 : AppDimensions.p16,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -217,40 +219,48 @@ class OpportunityCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.access_time_rounded,
-                          size: 13,
-                          color: isUrgent
-                              ? AppColors.accentRose
-                              : (isDark
-                                    ? AppColors.textMutedDark
-                                    : AppColors.textMutedLight),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          DateFormatter.formatDeadlineRemaining(
-                            opportunity.deadline,
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.access_time_rounded,
+                            size: 13,
+                            color: isUrgent
+                                ? AppColors.accentRose
+                                : (isDark
+                                      ? AppColors.textMutedDark
+                                      : AppColors.textMutedLight),
                           ),
-                          style:
-                              AppTextStyles.labelSmall(
-                                context,
-                                color: isUrgent
-                                    ? AppColors.accentRose
-                                    : (isDark
-                                          ? AppColors.textMutedDark
-                                          : AppColors.textSecondaryLight),
-                              ).copyWith(
-                                fontWeight: isUrgent
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              DateFormatter.formatDeadlineRemaining(
+                                opportunity.deadline,
                               ),
-                        ),
-                      ],
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style:
+                                  AppTextStyles.labelSmall(
+                                    context,
+                                    color: isUrgent
+                                        ? AppColors.accentRose
+                                        : (isDark
+                                              ? AppColors.textMutedDark
+                                              : AppColors.textSecondaryLight),
+                                  ).copyWith(
+                                    fontWeight: isUrgent
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    if (opportunity.isVerified)
+                    if (opportunity.isVerified) ...[
+                      const SizedBox(width: 8),
                       const VerifiedBadge(isVerified: true),
+                    ],
                   ],
                 ),
               ],

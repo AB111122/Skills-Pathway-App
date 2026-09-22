@@ -41,7 +41,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         _notifications = items;
         _isLoading = false;
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('[NotificationsScreen] Error loading notifications: $e');
+      debugPrintStack(stackTrace: stackTrace);
       if (!mounted) return;
       setState(() {
         _errorMessage = 'Unable to load notifications.';

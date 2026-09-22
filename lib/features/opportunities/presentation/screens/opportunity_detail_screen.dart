@@ -52,6 +52,16 @@ class _OpportunityDetailScreenState
   }
 
   Future<void> _selectAlert(OpportunityModel opportunity) async {
+    if (opportunity.status != OpportunityStatus.published) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Reminders available once this listing is verified.'),
+          ),
+        );
+      }
+      return;
+    }
     final type = await showModalBottomSheet<ReminderType>(
       context: context,
       builder: (context) => SafeArea(
@@ -163,18 +173,37 @@ class _OpportunityDetailScreenState
         ),
         actions: [
           // Deadline reminder bell
-          IconButton(
-            icon: Icon(
-              opp.hasDeadlineReminder
-                  ? Icons.notifications_active_rounded
-                  : Icons.notifications_none_rounded,
-              color: opp.hasDeadlineReminder
-                  ? AppColors.accentGold
-                  : (isDark ? Colors.white : AppColors.textPrimaryLight),
-            ),
-            tooltip: 'Set Deadline Reminder',
-            onPressed: () {
-              _selectAlert(opp);
+          Builder(
+            builder: (context) {
+              final isPublished = opp.status == OpportunityStatus.published;
+              return IconButton(
+                icon: Icon(
+                  opp.hasDeadlineReminder
+                      ? Icons.notifications_active_rounded
+                      : Icons.notifications_none_rounded,
+                  color: !isPublished
+                      ? (isDark ? AppColors.textMutedDark : AppColors.textMutedLight)
+                      : (opp.hasDeadlineReminder
+                          ? AppColors.accentGold
+                          : (isDark ? Colors.white : AppColors.textPrimaryLight)),
+                ),
+                tooltip: isPublished
+                    ? 'Set Deadline Reminder'
+                    : 'Reminders available once this listing is verified.',
+                onPressed: isPublished
+                    ? () {
+                        _selectAlert(opp);
+                      }
+                    : () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Reminders available once this listing is verified.',
+                            ),
+                          ),
+                        );
+                      },
+              );
             },
           ),
           // Bookmark save action

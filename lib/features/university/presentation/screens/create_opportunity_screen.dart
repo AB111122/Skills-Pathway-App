@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_dimensions.dart';
+import '../../../../core/utils/url_helper.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../models/opportunity_model.dart';
 import '../../../opportunities/presentation/controllers/opportunity_controller.dart';
@@ -93,7 +94,7 @@ class _CreateOpportunityScreenState
           location: _location.text.trim().isEmpty
               ? 'Not specified'
               : _location.text.trim(),
-          applicationUrl: _url.text.trim(),
+          applicationUrl: UrlHelper.normalizeUrl(_url.text.trim()),
         );
       } else {
         await repository.updateOpportunity(
@@ -105,7 +106,7 @@ class _CreateOpportunityScreenState
             type: _type!,
             deadline: deadline,
             location: _location.text.trim(),
-            officialUrl: _url.text.trim(),
+            officialUrl: UrlHelper.normalizeUrl(_url.text.trim()),
           ),
         );
       }

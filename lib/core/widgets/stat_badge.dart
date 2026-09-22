@@ -42,10 +42,14 @@ class StatBadge extends StatelessWidget {
             Icon(icon, size: 12, color: fgColor),
             const SizedBox(width: 4),
           ],
-          Text(
-            text,
-            style: AppTextStyles.labelSmall(context, color: fgColor).copyWith(
-              fontWeight: FontWeight.w600,
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.labelSmall(context, color: fgColor).copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
