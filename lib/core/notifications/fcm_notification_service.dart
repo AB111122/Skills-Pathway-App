@@ -9,6 +9,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../../firebase_options.dart';
+import '../../models/notification_model.dart';
+import '../../services/notification_service.dart';
 
 const fcmNotificationChannelId = 'skills_pathway_notifications';
 
@@ -34,18 +36,27 @@ class FcmNotificationService {
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
     FlutterLocalNotificationsPlugin? localNotifications,
-  }) : _messaging = messaging ?? FirebaseMessaging.instance,
-       _auth = auth ?? FirebaseAuth.instance,
-       _firestore = firestore ?? FirebaseFirestore.instance,
+    NotificationService? notificationService,
+  }) : _messagingInstance = messaging,
+       _authInstance = auth,
+       _firestoreInstance = firestore,
        _localNotifications =
-           localNotifications ?? FlutterLocalNotificationsPlugin();
+           localNotifications ?? FlutterLocalNotificationsPlugin(),
+       _notificationService = notificationService ?? NotificationService();
 
   static final instance = FcmNotificationService();
 
-  final FirebaseMessaging _messaging;
-  final FirebaseAuth _auth;
-  final FirebaseFirestore _firestore;
+  final FirebaseMessaging? _messagingInstance;
+  final FirebaseAuth? _authInstance;
+  final FirebaseFirestore? _firestoreInstance;
   final FlutterLocalNotificationsPlugin _localNotifications;
+  final NotificationService _notificationService;
+
+  FirebaseMessaging get _messaging =>
+      _messagingInstance ?? FirebaseMessaging.instance;
+  FirebaseAuth get _auth => _authInstance ?? FirebaseAuth.instance;
+  FirebaseFirestore get _firestore =>
+      _firestoreInstance ?? FirebaseFirestore.instance;
 
   StreamSubscription<String>? _tokenSubscription;
   StreamSubscription<User?>? _authSubscription;
@@ -192,11 +203,55 @@ class FcmNotificationService {
     } catch (error) {
       debugPrint('[FCM] Foreground notification display unavailable: $error');
     }
+    await syncRemoteMessage(message);
   }
 
   void _handleNotificationTap(RemoteMessage message) {
     _lastTapData = Map<String, dynamic>.from(message.data);
     debugPrint('[FCM] Notification tapped with data: $_lastTapData');
+    unawaited(syncRemoteMessage(message));
+  }
+
+  Future<void> syncRemoteMessage(RemoteMessage message) async {
+    try {
+      final content = contentFor(message);
+      if (content == null) return;
+
+      final currentUid =
+          Firebase.apps.isNotEmpty ? _auth.currentUser?.uid : null;
+      final userId = _currentUserId ??
+          currentUid ??
+          message.data['recipientId']?.toString();
+      if (userId == null) return;
+
+      final rawId = message.data['notificationId']?.toString() ??
+          message.data['id']?.toString() ??
+          message.messageId;
+      final stableId = rawId?.replaceAll('/', '_');
+
+      final rawType = message.data['type']?.toString();
+      final type = NotificationType.values.firstWhere(
+        (t) => t.name == rawType,
+        orElse: () => NotificationType.opportunity,
+      );
+
+      final opportunityId = message.data['opportunityId']?.toString();
+      final applicationId = message.data['applicationId']?.toString();
+      final postId = message.data['postId']?.toString();
+
+      await _notificationService.createForUser(
+        recipientId: userId,
+        title: content.title,
+        message: content.body,
+        type: type,
+        opportunityId: opportunityId,
+        applicationId: applicationId,
+        postId: postId,
+        id: stableId,
+      );
+    } catch (error) {
+      debugPrint('[FCM] Notification sync unavailable: $error');
+    }
   }
 
   void _handleLocalNotificationTap(NotificationResponse response) {
@@ -213,7 +268,9 @@ class FcmNotificationService {
   static FcmNotificationContent? contentFor(RemoteMessage message) {
     final notification = message.notification;
     final title = notification?.title ?? message.data['title']?.toString();
-    final body = notification?.body ?? message.data['body']?.toString();
+    final body = notification?.body ??
+        message.data['body']?.toString() ??
+        message.data['message']?.toString();
     if (title == null && body == null) return null;
     return FcmNotificationContent(title: title ?? 'Skills Pathway', body: body ?? '');
   }

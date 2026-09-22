@@ -199,9 +199,10 @@ class NotificationService {
     String? opportunityId,
     String? applicationId,
     String? postId,
+    String? id,
   }) async {
     final notification = NotificationModel(
-      id: _uuid.v4(),
+      id: id ?? _uuid.v4(),
       opportunityId: opportunityId,
       applicationId: applicationId,
       postId: postId,
@@ -211,7 +212,10 @@ class NotificationService {
       type: type,
     );
     if (Firebase.apps.isNotEmpty) {
-      await _firestore.collection('notifications').doc(notification.id).set({
+      final docRef = _firestore.collection('notifications').doc(notification.id);
+      final existingDoc = await docRef.get();
+      if (existingDoc.exists) return;
+      await docRef.set({
         ...notification.toJson(),
         'recipientId': recipientId,
         'applicationId': ?applicationId,
@@ -221,6 +225,7 @@ class NotificationService {
       return;
     }
     final notifications = await getNotifications();
+    if (notifications.any((item) => item.id == notification.id)) return;
     await _write([...notifications, notification]);
   }
 
