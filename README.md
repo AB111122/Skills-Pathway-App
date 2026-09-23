@@ -1,4 +1,5 @@
-🚀Skills Pathway App⭐📈
+🚀**Skills Pathway App**⭐📈
+
 AI-Assisted Career Guidance & Opportunity Platform
 
 Skills Pathway is a Flutter-based application designed to help students explore career paths, understand the skills they need, discover opportunities, and connect with universities through one platform.
