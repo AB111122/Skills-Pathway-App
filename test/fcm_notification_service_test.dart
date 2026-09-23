@@ -89,4 +89,4 @@ void main() {
     final notifications = await notificationService.getNotifications();
     expect(notifications.length, 1);
   });
-}
+}
